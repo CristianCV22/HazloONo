@@ -1,0 +1,235 @@
+/* --------------------------------------------------------------------------
+   11. LOGOTIPO: DETALLES Y ESTADOS
+   -------------------------------------------------------------------------- */
+
+/* Toda la coloración del SVG vive aquí (no en
+   atributos): una sola fuente de verdad. Así, los
+   degradados y las piezas responden a las variables
+   de estado de <body> sin duplicar reglas. */
+.marca-superior { fill: var(--logo-blue-deep); stroke: var(--logo-blue-deep); }
+.marca-inferior { fill: var(--logo-orange-deep); stroke: var(--logo-orange-deep); }
+.eje-izquierdo  { stroke: var(--logo-blue); }
+.eje-derecho    { stroke: var(--logo-orange); }
+
+/* Degradados de los arcos: tres paradas
+   de color (profundo → principal → vivo)
+   para un acabado con profundidad. */
+.grad-azul-inicio    { stop-color: var(--logo-blue-deep); }
+.grad-azul-medio     { stop-color: var(--logo-blue); }
+.grad-azul-fin       { stop-color: var(--logo-blue-bright); }
+.grad-naranja-inicio { stop-color: var(--logo-orange-deep); }
+.grad-naranja-medio  { stop-color: var(--logo-orange); }
+.grad-naranja-fin    { stop-color: var(--logo-orange-bright); }
+
+/* Brillo sutil del centro de la aguja. */
+.grad-centro-inicio { stop-color: #FFFFFF; }
+.grad-centro-fin    { stop-color: #E2E8F0; }
+
+/* Arcos de la rueda: el trazo es el degradado
+   de su marca. La coloración vive en CSS (no
+   en atributos): una sola fuente de verdad. */
+.ring-blue   { stroke: url(#grad-azul); }
+.ring-orange { stroke: url(#grad-naranja); }
+
+/* Centro de la aguja: brillo radial y
+   borde del estado (variables de <body>). */
+.needle-center {
+    fill: url(#grad-centro);
+    stroke: var(--aguja-centro);
+}
+
+.inner-ring {
+    stroke: var(--aguja-centro);
+}
+
+/* LA AGUJA ES EL DILEMA: por defecto
+   (también sin JS) está dividida — mitad
+   azul, mitad naranja: las dos
+   posibilidades, vivas e iguales (sin
+   sesgo). Al decidir, la aguja se viste
+   del color elegido y su cola (la mitad
+   que no apunta a la decisión) se
+   desvanece, como un cometa. */
+.needle-blue,
+.needle-orange {
+    transition: opacity 0.6s ease;
+}
+
+/* Estado base (el dilema, sin elección):
+   los colores por defecto no dependen de
+   JS — el logo se ve bien aunque el
+   módulo no cargue. .reflexion (la pone
+   script) reafirma el mismo estado. */
+.needle-blue {
+    fill: var(--logo-blue);
+    stroke: var(--logo-blue);
+}
+
+.needle-orange {
+    fill: var(--logo-orange);
+    stroke: var(--logo-orange);
+}
+
+.logo.hacerlo .needle-blue,
+.logo.hacerlo .needle-orange {
+    fill: var(--aguja-acento);
+    stroke: var(--aguja-acento);
+}
+
+.logo.no-hacerlo .needle-blue,
+.logo.no-hacerlo .needle-orange {
+    fill: var(--aguja-acento);
+    stroke: var(--aguja-acento);
+}
+
+/* Cola desvanecida (la mitad inferior) */
+.logo.hacerlo .needle-orange,
+.logo.no-hacerlo .needle-orange {
+    opacity: 0.25;
+}
+
+/* POSICIÓN DE LA AGUJA: la aguja es el indicador
+   de progreso. Durante la reflexión barre de
+   izquierda a derecha según el paso — un gauge
+   de proceso, perfectamente centrada en
+   "Consecuencias" (el momento de ver las dos
+   caras). Al decidir, se asienta en un extremo. */
+.needle-position {
+    transform-origin: 250px 250px; /* centro del SVG */
+    transition: transform 0.6s ease;
+}
+
+.logo.reflexion.paso-0 .needle-position { transform: rotate(-30deg); }
+.logo.reflexion.paso-1 .needle-position { transform: rotate(-15deg); }
+.logo.reflexion.paso-2 .needle-position { transform: rotate(0deg); }
+.logo.reflexion.paso-3 .needle-position { transform: rotate(15deg); }
+.logo.reflexion.paso-4 .needle-position { transform: rotate(30deg); }
+
+/* Decisión: la aguja se asienta en un extremo */
+.logo.no-hacerlo .needle-position { transform: rotate(-45deg); }
+.logo.hacerlo .needle-position { transform: rotate(45deg); }
+
+/* Decisión: la aguja se asienta con un
+   movimiento suave, sin rebote — elegir
+   se siente firme (no brusco). */
+.logo.hacerlo .needle-position,
+.logo.no-hacerlo .needle-position {
+    transition-duration: 0.7s;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* VISTA PREVIA: en la elección, al pasar el
+   puntero sobre una tarjeta (considerar, sin
+   comprometerse), la aguja gira la mirada
+   hacia esa opción — el dilema se inclina
+   un instante (±12°). Solo en estado de
+   reflexión: el compromiso real (±45°) llega
+   al hacer clic. Al retirar el puntero, la
+   aguja vuelve a su posición de gauge.
+   (:hover va en la tarjeta: el puntero puede
+   estar sobre su relleno, sin tocar el input.) */
+body:has(#reflexion section.activa:has(> fieldset label:hover:has(> input[value="no-hacerlo"])))
+    .logo.reflexion .needle-position {
+    transform: rotate(-12deg);
+}
+
+body:has(#reflexion section.activa:has(> fieldset label:hover:has(> input[value="hacerlo"])))
+    .logo.reflexion .needle-position {
+    transform: rotate(12deg);
+}
+
+/* La aguja "vive": oscila suavemente (±1.5°)
+   alrededor de su posición actual mientras
+   el usuario piensa. */
+.needle {
+    transform-origin: 250px 250px; /* centro del SVG */
+    animation: oscilar 5s ease-in-out infinite;
+}
+
+/* VIAJE INICIAL (solo en la primera
+   visual): al aparecer, la aguja
+   explora AMBAS posibilidades antes
+   de asentarse — la pregunta que abre
+   la película, leal al significado del
+   momento: aún no hay decisión. Se
+   repite cada vez que se vuelve a la
+   bienvenida. Comienza y termina donde
+   la aguja ya está (paso 0), sin
+   saltos. */
+body:not(.en-flujo) .needle-position {
+    animation: viajeInicial 2.8s ease-in-out 2.8s 1 backwards;
+}
+
+/* ONDA DE DECISIÓN: pulso único que expande
+   desde la rueda al elegir. Dos nombres de
+   keyframes (idénticos) para que la onda se
+   REACTIVE al cambiar de opción. */
+.pulso-decision {
+    transform-origin: 250px 250px; /* centro del SVG */
+    fill: none;
+    opacity: 0;
+}
+
+.logo.hacerlo .pulso-decision {
+    stroke: var(--aguja-acento);
+    animation: pulsoHacerlo 1.1s ease-out 0.1s 1;
+}
+
+.logo.no-hacerlo .pulso-decision {
+    stroke: var(--aguja-acento);
+    animation: pulsoNoHacerlo 1.1s ease-out 0.1s 1;
+}
+
+/* La mitad elegida de la rueda se ilumina
+   suavemente (glow) al decidir. */
+.logo.hacerlo .ring-orange {
+    filter: drop-shadow(0 0 6px rgba(249, 115, 22, 0.5));
+}
+
+.logo.no-hacerlo .ring-blue {
+    filter: drop-shadow(0 0 6px rgba(37, 99, 235, 0.5));
+}
+
+/* ENTRADA COREOGRÁFICA: cada pieza del
+   logo aparece en su momento (fade
+   suave de 0.8 s), justo tras los
+   arcos que se dibujan. `backwards`
+   garantiza que cada pieza empiece
+   invisible hasta su turno.
+   La aguja NO entra aquí: su fade
+   va dentro del viaje inicial (ver
+   viajeInicial), así no vuelve a
+   ejecutarse al avanzar de paso. */
+.markers {
+    animation: aparecer 0.8s ease 1s backwards;
+}
+
+.marks {
+    animation: aparecer 0.8s ease 1.3s backwards;
+}
+
+.inner-ring {
+    animation: aparecerAnillo 0.8s ease 1.9s backwards;
+}
+
+.needle-center {
+    animation: aparecer 0.8s ease 2.2s backwards;
+}
+
+/* Centro de cada marcador (eje de la
+   afirmación de la decisión). */
+.marca-superior { transform-origin: 250px 83px; }
+.marca-inferior { transform-origin: 250px 417px; }
+
+/* AFIRMACIÓN: al decidir, el marcador
+   de la dirección elegida da un pulso
+   firme (una vez, sin rebote). */
+.logo.hacerlo .marca-inferior {
+    animation: afirmar 0.9s cubic-bezier(0.4, 0, 0.2, 1) 0.2s 1;
+}
+
+.logo.no-hacerlo .marca-superior {
+    animation: afirmar 0.9s cubic-bezier(0.4, 0, 0.2, 1) 0.2s 1;
+}
+
+

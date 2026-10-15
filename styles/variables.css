@@ -1,0 +1,97 @@
+/* ==========================================================================
+   Hazlo o No - Variables de diseño (tokens)
+   ==========================================================================
+   Aquí viven TODAS las variables CSS: la paleta
+   de marca, los colores de texto y las propiedades
+   transicionales (@property).
+   Los MODIFICADORES DE ESTADO (estado-hacerlo,
+   estado-no-hacerlo, emocion-* y los retardos
+   contextuales) viven en states.css. */
+
+
+/* --------------------------------------------------------------------------
+   1. COLORES TRANSICIONALES (@property)
+   --------------------------------------------------------------------------
+   Registrar estas variables de color permite
+   TRANSICIONARLAS: al elegir, el ambiente y
+   la aguja cambian de color en FUNDIDO
+   suave (0.9 s), no de golpe. En navegadores
+   sin @property, el cambio es instantáneo
+   (degradado elegante: siguen funcionando). */
+@property --ambiente-azul {
+    syntax: '<color>';
+    inherits: true;
+    initial-value: rgba(37, 99, 235, 0.07);
+}
+
+@property --ambiente-naranja {
+    syntax: '<color>';
+    inherits: true;
+    initial-value: rgba(249, 115, 22, 0.07);
+}
+
+@property --aguja-acento {
+    syntax: '<color>';
+    inherits: true;
+    initial-value: #2563EB;
+}
+
+@property --aguja-centro {
+    syntax: '<color>';
+    inherits: true;
+    initial-value: #0C2F65;
+}
+
+
+/* --------------------------------------------------------------------------
+   2. VARIABLES DE DISEÑO (identidad visual del Documento Maestro, sección 5)
+   -------------------------------------------------------------------------- */
+:root {
+    /* Nomenclatura de tokens (semántica, no literal):
+       --logo-blue*    = marca "No Hacerlo" (azul)
+       --logo-orange*  = marca "Hacerlo"    (naranja)
+       --aguja-*       = aguja del logo (cambia con la elección)
+       --ambiente-*    = tinte de pantalla (cambia con la elección)
+       --color-*       = texto y mensajes
+       3 niveles por marca: deep (estructural), base (principal),
+       bright (vivo/énfasis). Cambiar la marca = tocar solo :root. */
+
+    /* Paleta del logotipo: 3 niveles por color + neutro */
+    --logo-blue-deep:    #0C2F65;   /* estructural: marcadores, anillos      */
+    --logo-blue:         #094584;   /* principal del estado "No Hacerlo"     */
+    --logo-blue-bright:  #2563EB;   /* vivo: aguja y énfasis en "No Hacerlo" */
+
+    --logo-orange-deep:    #C2410C; /* estructural: marcadores, anillos      */
+    --logo-orange:         #F97316; /* principal del estado "Hacerlo"        */
+    --logo-orange-bright:  #EA580C; /* vivo: aguja y énfasis en "Hacerlo"    */
+
+    --logo-neutral: #F8FAFC;        /* casi blanco: centro de la aguja, fondo */
+
+    /* Estado del logotipo y del ambiente: JS pone las
+       clases en <body> y TODO responde desde aquí.
+       Agregar piezas nuevas al logo = se adaptan solas.
+       (Esta es la clave de la Fase 2: un sistema
+       extensible sin tocar reglas por pieza.)
+       Valores por defecto = "No Hacerlo"; los
+       modificadores de estado están en states.css. */
+    --aguja-acento: var(--logo-blue-bright); /* aguja: azul hasta elegir */
+    --aguja-centro: var(--logo-blue-deep);   /* centro y anillo interior */
+
+    /* Colores de texto (contraste WCAG AA sobre el fondo) */
+    --color-texto:       #1E293B;   /* texto principal  (~13:1)              */
+    --color-texto-suave: #475569;   /* texto secundario (~7:1)               */
+    --color-error:       #B91C1C;   /* mensajes de validación                */
+
+    /* Ambiente: la elección final tiñe sutilmente la pantalla */
+    --ambiente-azul:    rgba(37, 99, 235, 0.07);
+    --ambiente-naranja: rgba(249, 115, 22, 0.07);
+
+    /* Retardo base de la entrada del
+       contenido. En la primera visual,
+       el contenido ESPERA al logo (ver
+       apartado 12). En flujo, es el
+       «respiro» entre pasos (1.2.1).
+       Los valores contextuales (apertura
+       y flujo) están en states.css. */
+    --retardo-escena: 0s;
+}

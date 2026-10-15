@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" role="img" aria-labelledby="titulo descripcion">
+  <!-- Favicon de «Hazlo o No»: la misma rueda de decisión
+       de la página, con sus colores de marca. La aguja
+       aparece dividida (mitad azul, mitad naranja):
+       el dilema, las dos posibilidades vivas. -->
+  <title id="titulo">Hazlo o No</title>
+  <desc id="descripcion">Dos arcos, azul y naranja, forman una rueda con una aguja central dividida.</desc>
+
+  <defs>
+    <linearGradient id="azul" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0C2F65"/>
+      <stop offset="0.55" stop-color="#094584"/>
+      <stop offset="1" stop-color="#2563EB"/>
+    </linearGradient>
+    <linearGradient id="naranja" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#C2410C"/>
+      <stop offset="0.55" stop-color="#F97316"/>
+      <stop offset="1" stop-color="#EA580C"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Rueda: arco azul (izquierda) y su espejo naranja -->
+  <path d="M 170 120 A 150 150 0 0 0 170 380"
+        fill="none" stroke="url(#azul)" stroke-width="28" stroke-linecap="round"/>
+  <path d="M 170 120 A 150 150 0 0 0 170 380"
+        fill="none" stroke="url(#naranja)" stroke-width="28" stroke-linecap="round"
+        transform="translate(500 0) scale(-1 1)"/>
+
+  <!-- Anillo interior de referencia -->
+  <circle cx="250" cy="250" r="105" fill="none" stroke="#0C2F65" stroke-width="4" opacity="0.18"/>
+
+  <!-- Marcadores de dirección -->
+  <polygon points="250,48 222,100 278,100" fill="#0C2F65"/>
+  <polygon points="250,452 222,400 278,400" fill="#C2410C"/>
+
+  <!-- Referencias laterales -->
+  <line x1="135" y1="250" x2="165" y2="250" stroke="#094584" stroke-width="12" stroke-linecap="round"/>
+  <line x1="335" y1="250" x2="365" y2="250" stroke="#F97316" stroke-width="12" stroke-linecap="round"/>
+
+  <!-- Aguja partida: el dilema -->
+  <polygon points="250,130 272,240 250,250 228,240" fill="#2563EB"/>
+  <polygon points="250,370 272,260 250,250 228,260" fill="#EA580C"/>
+  <circle cx="250" cy="250" r="18" fill="#0C2F65"/>
+</svg>

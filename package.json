@@ -1,0 +1,11 @@
+{
+  "name": "hazlo-o-no",
+  "version": "1.0.0",
+  "description": "Hazlo o No: una pausa consciente para tomar decisiones con mayor claridad.",
+  "private": true,
+  "scripts": {
+    "test": "node tests/flujo.test.js",
+    "serve": "python -m http.server 8000"
+  },
+  "license": "MIT"
+}

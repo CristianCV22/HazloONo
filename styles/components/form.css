@@ -1,0 +1,583 @@
+/* --------------------------------------------------------------------------
+   6. SECCIONES (una por pantalla del flujo)
+   -------------------------------------------------------------------------- */
+form {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Sin JS: secciones en flujo normal (la página hace scroll). */
+section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    text-align: center;
+}
+
+/* Con JS: pantalla fija. Las secciones se superponen;
+   solo la que tiene .activa es visible. Los pseudos
+   con margin:auto centran el contenido verticalmente
+   y, si no cabe, dejan que la sección haga scroll
+   interno sin recortar (truco de flexbox). */
+.js #reflexion {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+}
+
+.js #reflexion section {
+    position: absolute;
+    inset: 0;
+    justify-content: flex-start;
+    overflow-y: auto;
+
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.45s ease, transform 0.45s ease, visibility 0s linear 0.45s;
+}
+
+.js #reflexion section::before,
+.js #reflexion section::after {
+    content: "";
+    margin: auto 0;
+}
+
+/* Sección visible */
+.js #reflexion section.activa {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.45s ease, transform 0.45s ease, visibility 0s;
+}
+
+/* Transiciones direccionales:
+   avanzar → la saliente va a la izquierda, la entrante
+   viene de la derecha (y al revés al retroceder).
+   0.45 s y 4 rem: se percibe el movimiento sin
+   distraer (la calma es parte de la experiencia). */
+.js #reflexion section.pre-entrada.desde-derecha  { transform: translateX(4rem); }
+.js #reflexion section.pre-entrada.desde-izquierda { transform: translateX(-4rem); }
+.js #reflexion section.sale-izquierda  { opacity: 0; transform: translateX(-4rem); }
+.js #reflexion section.sale-derecha    { opacity: 0; transform: translateX(4rem); }
+
+
+/* El umbral de la bienvenida (1.1.1):
+   un segundo tiempo que convierte el
+   clic en pausa consciente. Cross-fade
+   entre la invitación y la pausa;
+   el anillo respira (8 s) y se apaga
+   con prefers-reduced-motion (lo
+   cubren los kill-blocks existentes). */
+.bienvenida-inicial,
+.bienvenida-umbral {
+    transition: opacity 0.4s ease, visibility 0.4s;
+}
+
+.bienvenida-umbral[hidden] {
+    display: none;
+}
+
+.bienvenida-umbral {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    text-align: center;
+    padding: 2rem;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+#reflexion section.activa.en-umbral .bienvenida-inicial {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+#reflexion section.activa.en-umbral .bienvenida-umbral {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+.bienvenida-umbral h3 {
+    font-size: 1.9rem;
+    max-width: 650px;
+}
+
+/* Anillo que respira: decorativo,
+   detrás del texto (z-index). */
+.anillo-respiracion {
+    position: absolute;
+    width: 24rem;
+    height: 24rem;
+    border-radius: 50%;
+    border: 2px solid var(--aguja-centro);
+    opacity: 0.35;
+    animation: respirar 8s ease-in-out infinite;
+}
+
+.bienvenida-umbral > :not(.anillo-respiracion) {
+    position: relative;
+    z-index: 1;
+}
+
+/* Botón de texto (volver): discreto,
+   sin caja, subrayado al pasar. */
+button.boton-texto {
+    background: none;
+    border: none;
+    padding: 0.25rem 0.5rem;
+    color: var(--color-texto-suave);
+    font-size: 0.85rem;
+    text-decoration: underline;
+    text-underline-offset: 0.25rem;
+    cursor: pointer;
+}
+
+button.boton-texto:hover {
+    color: var(--color-texto);
+}
+
+/* El punto del botón «Respirar conmigo»:
+   respira con el anillo (8 s). */
+.punto-respiracion {
+    display: inline-block;
+    width: 0.55em;
+    height: 0.55em;
+    margin-right: 0.5em;
+    border-radius: 50%;
+    background: var(--aguja-centro);
+    vertical-align: baseline;
+    animation: respirar 8s ease-in-out infinite;
+}
+
+/* Modo respiración guiada (1.1.2):
+   el anillo pasa de decorativo a guía.
+   Transiciones de 4 s (la duración de
+   cada fase); inhala = expandir,
+   exhala = contraer, sostén = mantener. */
+.anillo-respiracion.guiado {
+    animation: none;
+    transition: transform 4s ease-in-out, opacity 4s ease-in-out;
+    transform: scale(1);
+    opacity: 0.35;
+}
+
+.anillo-respiracion.guiado.inhala {
+    transform: scale(1.08);
+    opacity: 0.5;
+}
+
+.anillo-respiracion.guiado.exhala {
+    transform: scale(0.94);
+    opacity: 0.28;
+}
+
+/* Layout del modo respiración:
+   fase grande encima del anillo,
+   cuenta atrás prominente. */
+.umbral-respiracion {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    text-align: center;
+}
+
+.umbral-respiracion[hidden] {
+    display: none;
+}
+
+#fase-respiracion {
+    font-size: 1.75rem;
+    font-weight: 600;
+    min-height: 1.2em; /* evita saltos entre fases */
+}
+
+.cuenta-respiracion {
+    font-size: 3.5rem;
+    font-weight: 700;
+    line-height: 1;
+    min-height: 1.1em;
+}
+
+.ciclo-respiracion {
+    font-size: 0.85rem;
+    color: var(--color-texto-suave);
+}
+
+.bienvenida-inicial {
+    width: 100%;
+    max-width: 650px;
+    padding: 1.5rem 1.25rem;
+    border-radius: 1rem;
+    background: var(--emocion-tinte, transparent);
+    transition: background-color 0.4s ease;
+}
+
+.bienvenida-inicial .emociones-opcion legend {
+    color: var(--emocion-acento, var(--color-texto-suave));
+    transition: color 0.3s ease;
+}
+
+/* Etiquetado emocional (1.3.1): cuatro
+   emociones opcionales al empezar. Botones
+   pildora; al seleccionarse se marcan
+   (aria-pressed) y se colorean sutilmente.
+   Parte de la respuesta (se persiste). */
+.emociones-opcion {
+    width: 100%;
+    max-width: 650px;
+    padding: 0;
+    margin: 0;
+    border: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.emociones-opcion legend {
+    font-size: 1rem;
+    font-weight: 600;
+    text-align: center;
+    color: var(--color-texto-suave);
+    max-width: 560px;
+    margin-bottom: 0;
+}
+
+.emociones {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center;
+}
+
+button[data-emocion] {
+    padding: 0.4rem 1rem;
+    font-size: 0.9rem;
+    border: 2px solid #CBD5E1;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.9);
+    color: var(--color-texto);
+    cursor: pointer;
+    transition: border-color 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
+}
+
+button[data-emocion]:hover {
+    border-color: var(--logo-blue);
+    transform: translateY(-2px);
+}
+
+button[data-emocion][aria-pressed="true"] {
+    border-color: var(--logo-blue);
+    background: var(--aguja-centro);
+    color: #FFFFFF;
+    font-weight: 600;
+}
+
+/* Calma post-decision (1.4.2): durante ~1.5-2 s
+   solo se ve fondo y aguja; luego el contenido
+   entra en cascada. La clase .pausa-final oculta
+   los hijos de la seccion de cierre hasta que
+   form.js la retira. */
+.js #reflexion section.pausa-final > * {
+    opacity: 0;
+    pointer-events: none;
+    animation: none;
+    transition: opacity 0.6s ease 1.5s;
+}
+
+/* Frase de cierre (1.4.1): refuerza la pausa. */
+.frase-cierre {
+    font-size: 1.25rem;
+    font-weight: 600;
+    max-width: 650px;
+    text-align: center;
+    color: var(--color-texto);
+    margin: 0 0 0.75rem;
+}
+
+/* --------------------------------------------------------------------------
+   8. FORMULARIO: fieldset, etiquetas, campos
+   -------------------------------------------------------------------------- */
+fieldset {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    flex: 1 1 auto; /* en pantalla fija, los fieldsets reparten el espacio */
+    min-height: 0;
+    padding: 0;
+    margin: 0;
+    border: none;
+}
+
+legend {
+    padding: 0;
+    margin-bottom: 0.25rem;
+    max-width: 650px;
+    font-size: 1.25rem;
+    font-weight: 700;
+    text-align: center;
+}
+
+/* Etiquetas: bloque sobre el campo. Las que contienen un
+   radio se maquetan como "tarjeta" más abajo (ver apartado 9). */
+label {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.4rem;
+    width: min(100%, 560px);
+    font-weight: 600;
+    text-align: left;
+}
+
+/* Los campos crecen para llenar la pantalla fija
+   (en móviles altos se siente inmersivo) */
+textarea {
+    width: 100%;
+    flex: 1 1 auto;
+    min-height: 5rem;
+    padding: 0.8rem;
+    border: 2px solid #CBD5E1;
+    border-radius: 0.5rem;
+    background: rgba(255, 255, 255, 0.9);
+    resize: vertical;
+    transition: border-color 0.2s ease;
+}
+
+/* Retroalimentación visible al foco (accesibilidad: cada acción
+   del usuario debe tener una reacción perceptible). Incluye
+   el enlace del logotipo: el foco de teclado nunca se pierde. */
+textarea:focus-visible,
+input:focus-visible,
+button:focus-visible,
+a:focus-visible {
+    outline: 3px solid var(--logo-blue-bright);
+    outline-offset: 1px;
+}
+
+textarea:focus-visible {
+    border-color: var(--logo-blue-bright);
+}
+
+
+/* --------------------------------------------------------------------------
+   9. OPCIONES DE ELECCIÓN (tarjetas con radio, sin clases: :has())
+   -------------------------------------------------------------------------- */
+label:has(> input[type="radio"]) {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 1.25rem;
+    border: 2px solid #CBD5E1;
+    border-radius: 0.75rem;
+    background: rgba(255, 255, 255, 0.85);
+    cursor: pointer;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+label:has(> input[type="radio"]:hover) {
+    border-color: var(--logo-blue);
+    transform: translateY(-2px);
+}
+
+/* Tarjeta seleccionada: azul para "No hacerlo", naranja para "Hacerlo" */
+label:has(> input[value="no-hacerlo"]:checked) {
+    border-color: var(--logo-blue);
+    background: #EFF6FF;
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.18);
+}
+
+label:has(> input[value="hacerlo"]:checked) {
+    border-color: var(--logo-orange);
+    background: #FFF7ED;
+    box-shadow: 0 4px 14px rgba(249, 115, 22, 0.18);
+}
+
+input[type="radio"] {
+    width: 1.25rem;
+    height: 1.25rem;
+    accent-color: var(--logo-orange);
+    flex-shrink: 0;
+}
+
+
+/* --------------------------------------------------------------------------
+   12. COREOGRAFÍA Y VIDA (animaciones de la pantalla)
+   -------------------------------------------------------------------------- */
+
+/* Logotipo: respiración infinita
+   (ciclo 6 s). La entrada del logo
+   se hace pieza por pieza (ver
+   apartado 11): cada parte aparece
+   en su momento, en cascada. */
+header .logo {
+    animation: respirar 6s ease-in-out 0.6s infinite;
+}
+
+/* Arcos de la rueda: se dibujan solos
+   al cargar, en cascada (primero el
+   azul, luego el naranja). Son
+   semicírculos de radio 150 → longitud
+   ≈ 471.24 px. El glow de la decisión
+   entra con transición. */
+.ring-blue {
+    stroke-dasharray: 471.24;
+    stroke-dashoffset: 471.24;
+    animation: trazar 1.8s ease-out 0.3s forwards;
+    transition: filter 0.6s ease;
+}
+
+.ring-orange {
+    stroke-dasharray: 471.24;
+    stroke-dashoffset: 471.24;
+    animation: trazar 1.8s ease-out 0.6s forwards;
+    transition: filter 0.6s ease;
+}
+
+/* Nombre del producto: entra en fade
+   tras el logotipo — la marca completa
+   la escena. */
+header h1 {
+    animation: aparecer 0.8s ease 2.5s backwards;
+}
+
+/* Entrada escalonada del contenido de CADA paso,
+   con jerarquía de lectura: al activarse una
+   sección, sus hijos aparecen uno tras otro
+   (pasos de 0.12 s) en orden — primero la
+   pregunta, luego el campo, al final la acción.
+   :where() tiene especificidad 0 para no pisar
+   a los botones. El retardo base (--retardo-escena)
+   hace que, en la primera visual, el contenido
+   espere al logo. El retardo de cada hijo viaja
+   en --retardo-hijo: los botones lo combinan con
+   su pulso de atención. El respiro entre pasos
+   (--retardo-respiro, 1.2.1) suma una pausa de
+   calma antes de la cascada. */
+.js #reflexion section.activa > * {
+    animation: entrada 0.7s ease backwards;
+    animation-delay: var(--retardo-hijo, 0s);
+}
+
+.js #reflexion section.activa > :where(:nth-child(1))  { --retardo-hijo: calc(0.12s + var(--retardo-escena)); animation-delay: calc(0.12s + var(--retardo-escena)); }
+.js #reflexion section.activa > :where(:nth-child(2))  { --retardo-hijo: calc(0.24s + var(--retardo-escena)); animation-delay: calc(0.24s + var(--retardo-escena)); }
+.js #reflexion section.activa > :where(:nth-child(3))  { --retardo-hijo: calc(0.36s + var(--retardo-escena)); animation-delay: calc(0.36s + var(--retardo-escena)); }
+.js #reflexion section.activa > :where(:nth-child(4))  { --retardo-hijo: calc(0.48s + var(--retardo-escena)); animation-delay: calc(0.48s + var(--retardo-escena)); }
+.js #reflexion section.activa > :where(:nth-child(5))  { --retardo-hijo: calc(0.60s + var(--retardo-escena)); animation-delay: calc(0.60s + var(--retardo-escena)); }
+.js #reflexion section.activa > :where(:nth-child(6))  { --retardo-hijo: calc(0.72s + var(--retardo-escena)); animation-delay: calc(0.72s + var(--retardo-escena)); }
+.js #reflexion section.activa > :where(:nth-child(n+7)) { --retardo-hijo: calc(0.84s + var(--retardo-escena)); animation-delay: calc(0.84s + var(--retardo-escena)); }
+
+/* Los botones de acción: entran en su posición
+   natural (como cualquier hijo, al final de la
+   lectura) y dan un pulso de atención tras la
+   entrada (la acción invita, no interrumpe). */
+.js #reflexion section.activa > button {
+    animation:
+        entrada 0.7s ease backwards,
+        latir 0.8s ease-out calc(1.1s + var(--retardo-escena)) 1;
+    animation-delay: var(--retardo-hijo, 0s), calc(1.1s + var(--retardo-escena));
+}
+
+/* Keyframes de la coreografía y la vida */
+@keyframes entrada {
+    from { opacity: 0; transform: translateY(0.75rem); }
+    to   { opacity: 1; transform: none; }
+}
+
+@keyframes zoomFondo {
+    from { opacity: 0; transform: scale(1.04); }
+    to   { opacity: 0.65; transform: scale(1); }
+}
+
+@keyframes trazar {
+    to { stroke-dashoffset: 0; }
+}
+
+@keyframes respirar {
+    0%, 100% { transform: scale(1); }
+    50%      { transform: scale(1.03); }
+}
+
+@keyframes latir {
+    0%, 100% { transform: scale(1); }
+    50%      { transform: scale(1.05); }
+}
+
+@keyframes oscilar {
+    0%, 100% { transform: rotate(-1.5deg); }
+    50%      { transform: rotate(1.5deg); }
+}
+
+@keyframes pulsar {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(9, 69, 132, 0.35); }
+    50%      { box-shadow: 0 0 0 6px rgba(9, 69, 132, 0); }
+}
+
+@keyframes deriva {
+    0%, 100% { background-position: 0 0, 0% 0%, 100% 100%; }
+    50%      { background-position: 0 0, 100% 100%, 0% 0%; }
+}
+
+/* Ondas de decisión (visualmente idénticas;
+   nombres distintos para reactivarse al
+   cambiar de opción). */
+@keyframes pulsoHacerlo {
+    0%   { opacity: 0.55; transform: scale(0.93); }
+    100% { opacity: 0;    transform: scale(1.12); }
+}
+
+@keyframes pulsoNoHacerlo {
+    0%   { opacity: 0.55; transform: scale(0.93); }
+    100% { opacity: 0;    transform: scale(1.12); }
+}
+
+@keyframes aparecer {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+/* El anillo interior entra respetando
+   su opacidad base (0.18) — un `aparecer`
+   normal lo haría destellar un instante. */
+@keyframes aparecerAnillo {
+    from { opacity: 0; }
+    to   { opacity: 0.18; }
+}
+
+/* Afirmación de la dirección elegida:
+   pulso con leve rebote (el mismo
+   resorte elástico de la aguja). */
+@keyframes afirmar {
+    0%   { transform: scale(1); }
+    40%  { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+/* Viaje inicial de la aguja: explora
+   "no hacerlo" (-45°) y "hacerlo"
+   (+45°) antes de asentarse en el
+   paso 0 (-30°). Calmo y deliberado:
+   la reflexión comienza. */
+@keyframes viajeInicial {
+    0%   { opacity: 0; transform: rotate(-30deg); }
+    10%  { opacity: 1; }
+    20%  { transform: rotate(-45deg); }
+    45%  { transform: rotate(45deg); }
+    70%  { transform: rotate(-12deg); }
+    100% { opacity: 1; transform: rotate(-30deg); }
+}
+
+

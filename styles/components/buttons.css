@@ -1,0 +1,37 @@
+/* --------------------------------------------------------------------------
+   10. BOTONES
+   -------------------------------------------------------------------------- */
+button {
+    padding: 0.8rem 1.4rem;
+    border: 2px solid transparent;
+    border-radius: 0.5rem;
+    background: var(--logo-blue-deep);
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+}
+
+button:hover {
+    background: var(--logo-blue);
+    transform: translateY(-2px);
+}
+
+button:active {
+    transform: translateY(0);
+}
+
+/* Botón secundario (volver atrás): selección por atributo, sin clase */
+button[data-secundario] {
+    background: transparent;
+    color: var(--color-texto-suave);
+    border-color: #CBD5E1;
+}
+
+button[data-secundario]:hover {
+    background: rgba(255, 255, 255, 0.7);
+    border-color: var(--color-texto-suave);
+}
+
+

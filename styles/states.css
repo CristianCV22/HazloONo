@@ -1,0 +1,130 @@
+/* --------------------------------------------------------------------------
+   15. RESPONSIVE Y ACCESIBILIDAD
+   -------------------------------------------------------------------------- */
+@media (max-width: 600px) {
+    h2 {
+        font-size: 1.75rem;
+    }
+
+    nav[aria-label="Progreso de la reflexión"] li {
+        font-size: 0.7rem;
+        padding: 0.25rem 0.6rem;
+    }
+
+    footer {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.25rem;
+    }
+
+    #pie-consejo {
+        text-align: center;
+    }
+}
+
+/* Pantallas muy cortas (móvil en horizontal):
+   comprimir para que quepa todo sin scroll */
+@media (max-height: 560px) {
+    body {
+        padding: 0.6rem 1rem;
+        gap: 0.5rem;
+    }
+
+    .logo {
+        width: 100px;
+    }
+
+    h1 {
+        font-size: 1.1rem;
+    }
+
+    h2 {
+        font-size: 1.5rem;
+    }
+
+    section {
+        gap: 0.6rem;
+    }
+
+    legend {
+        font-size: 1.05rem;
+    }
+}
+
+/* Respetar la preferencia de movimiento reducido del
+   sistema: toda la coreografía se desactiva (duración,
+   retardo e iteraciones), y las transiciones son
+   instantáneas.
+   EXCEPCIÓN: el usuario puede ANULAR el sistema desde
+   el diálogo de Ayuda («Activar»): la clase
+   .fuerza-animacion en <html> (la pone utils.js)
+   reactiva la experiencia completa. Accesibilidad
+   con agencia: el sistema manda, salvo que el usuario
+   decida lo contrario. */
+@media (prefers-reduced-motion: reduce) {
+    html:not(.fuerza-animacion) *,
+    html:not(.fuerza-animacion) *::before,
+    html:not(.fuerza-animacion) *::after {
+        animation-duration: 0.01ms !important;
+        animation-delay: 0s !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* El usuario pidió desactivarlas explícitamente
+   (aunque el sistema las tenga activadas). */
+html.fuerza-reduccion *,
+html.fuerza-reduccion *::before,
+html.fuerza-reduccion *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+}
+
+/* --------------------------------------------------------------------------
+   16. MODIFICADORES DE ESTADO (variables contextuales)
+   -------------------------------------------------------------------------- */
+
+/* Primera visual: primero la escena
+   (el logo), luego las palabras.
+   La apertura es lenta y deliberada. */
+body:not(.en-flujo) {
+    --retardo-escena: 2.4s;
+}
+
+/* El respiro entre pasos (1.2.1): 0.4 s de
+   calma — solo fondo y aguja en pantalla —
+   antes de que el contenido del nuevo paso
+   empiece a entrar. Vive en --retardo-escena
+   (el retardo base del contenido): en flujo
+   vale 0.4 s de calma sobre el movimiento; en la apertura, 2.4 s (el
+   contenido ya espera a la escena). La aguja,
+   mientras tanto, se asienta en su posición. */
+body.en-flujo {
+    --retardo-escena: 0.73s;
+}
+
+/* "No hacerlo": aguja azul, ambiente azul */
+body.estado-no-hacerlo {
+    --aguja-acento: var(--logo-blue-bright);
+    --aguja-centro: var(--logo-blue-deep);
+    --ambiente-azul: rgba(37, 99, 235, 0.16);
+}
+
+/* "Hacerlo": aguja naranja, ambiente naranja */
+body.estado-hacerlo {
+    --aguja-acento: var(--logo-orange-bright);
+    --aguja-centro: var(--logo-orange-deep);
+    --ambiente-naranja: rgba(249, 115, 22, 0.16);
+}
+
+/* Tinte emocional (1.3.2): la emoción
+   elegida tiñe sutilmente la bienvenida.
+   (Las clases emocion-* las pone JS.) */
+body.emocion-miedo   { --emocion-tinte: rgba(99, 102, 241, 0.08); --emocion-acento: #4F46E5; }
+body.emocion-ilusion { --emocion-tinte: rgba(249, 115, 22, 0.10); --emocion-acento: #C2410C; }
+body.emocion-duda    { --emocion-tinte: rgba(168, 85, 247, 0.08); --emocion-acento: #7C3AED; }
+body.emocion-calma   { --emocion-tinte: rgba(20, 184, 166, 0.10); --emocion-acento: #0F766E; }
+

@@ -1,0 +1,11 @@
+# Dependencias (si se añaden en el futuro)
+node_modules/
+
+# Editoriales / SO
+.DS_Store
+Thumbs.db
+*.swp
+
+# Logs y temporales
+*.log
+*.tmp

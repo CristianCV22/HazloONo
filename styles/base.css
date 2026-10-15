@@ -1,0 +1,236 @@
+﻿/* ==========================================================================
+   Hazlo o No — Hoja de estilos única
+   --------------------------------------------------------------------------
+   Experiencia de PANTALLA FIJA (sin scroll) con JS:
+   - Las secciones se superponen; solo la que tiene .activa
+     es visible, con transiciones direccionales.
+   - Sin JS (.js ausente): flujo normal con scroll (degradado
+     elegante, principio del Documento Maestro).
+   Estrategia de clases: aprovechar la semántica del HTML
+   (elementos, atributos, :has, :where); clases solo donde
+   son necesarias (estados del logo, .activa, .texto-apoyo).
+   ========================================================================== */
+
+
+/* --------------------------------------------------------------------------
+   PROPIEDADES REGISTRADAS (/* --------------------------------------------------------------------------
+   1. RESET BÁSICO (normalización ligera entre navegadores)
+   -------------------------------------------------------------------------- */
+*,
+*::before,
+*::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Eliminar bordes de medios y hacerlos responsivos */
+img,
+picture,
+video,
+canvas,
+svg {
+    display: block;
+    max-width: 100%;
+}
+
+/* Suavizado de fuentes */
+body {
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Movilidad: sin tirada ("pull to refresh") — la
+   pantalla es fija con JS; y sin destello gris
+   al tocar enlaces y controles (mobile). */
+html {
+    overscroll-behavior: none;
+}
+
+a,
+button,
+input,
+textarea,
+label {
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Selección de texto con el tono de la marca */
+::selection {
+    background: rgba(37, 99, 235, 0.28);
+    color: #0C2F65;
+}
+
+/* Reset de listas (el indicador de progreso se maqueta a mano) */
+ul,
+ol {
+    list-style: none;
+}
+
+/* Reset de enlaces */
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+/* Reset de controles de formulario */
+button,
+input,
+textarea,
+select {
+    font: inherit;
+}
+
+
+/* --------------------------------------------------------------------------
+   3. LAYOUT GENERAL
+   -------------------------------------------------------------------------- */
+body {
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 1.25rem;
+    position: relative;
+    background-color: var(--logo-neutral);
+    color: var(--color-texto);
+
+    /* Fundido de color al elegir: el ambiente
+       de la pantalla y la aguja transitan
+       suavemente entre estados (gracias a
+       las propiedades registradas arriba). */
+    transition:
+        --ambiente-azul 0.9s ease,
+        --ambiente-naranja 0.9s ease,
+        --aguja-acento 0.9s ease,
+        --aguja-centro 0.9s ease;
+}
+
+/* Con JavaScript: PANTALLA FIJA, sin scroll.
+   Sin JS: la página crece y fluye con scroll normal. */
+.js body {
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
+}
+
+/* Capa de fondo: imagen a media opacidad (z-index 0, detrás
+   del contenido). La imagen entra en la coreografía:
+   fade + zoom suave al cargar.
+   GRANO DE PELÍCULA: una textura de ruido SVG estática
+   (4 %) se superpone a la foto — carácter cinematográfico,
+   como el grano de una película. Es quieta por diseño:
+   el movimiento lo ponen las piezas del logo. */
+body::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image:
+        url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='grano'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='180' height='180' filter='url(%23grano)' opacity='0.04'/></svg>"),
+        url("../assets/images/fondo.jpg");
+    background-size: 180px 180px, cover;
+    background-position: center;
+    opacity: 0.65;
+    z-index: 0;
+
+    transform-origin: center;
+    animation: zoomFondo 4s ease-out both;
+}
+
+/* Capa de legibilidad + AMBIENTE VIVO: degradado que suaviza
+   el fondo bajo el texto, VIÑETA cinematográfica que
+   enmarca la escena (esquinas apenas oscurecidas) y dos
+   manchas de color (azul arriba-izquierda, naranja
+   abajo-derecha) que derivan lentamente durante 22 s.
+   Nunca compite con el contenido.
+   También entra en fade: nada aparece de la nada. */
+body::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(ellipse at center, transparent 58%, rgba(12, 47, 101, 0.06)),
+        linear-gradient(to bottom, rgba(248, 250, 252, 0.35), rgba(248, 250, 252, 0.05) 45%, rgba(248, 250, 252, 0.2)),
+        radial-gradient(ellipse 60% 50% at 20% 30%, var(--ambiente-azul), transparent),
+        radial-gradient(ellipse 60% 50% at 80% 70%, var(--ambiente-naranja), transparent);
+    background-size: 100% 100%, 100% 100%, 220% 220%, 220% 220%;
+    background-position: center, 0 0, 0% 0%, 100% 100%;
+    animation:
+        aparecer 2s ease 0.2s backwards,
+        deriva 22s ease-in-out 2.2s infinite;
+    z-index: 0;
+}
+
+/* Cabecera, contenido y pie por encima de las capas de fondo */
+header,
+main,
+footer {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 700px;
+}
+
+/* La columna principal ocupa el espacio libre de la pantalla */
+main {
+    flex: 1;
+    min-height: 0; /* permite que el contenido interno se contraiga */
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+
+/* --------------------------------------------------------------------------
+   7. TIPOGRAFÍA Y TEXTOS
+   -------------------------------------------------------------------------- */
+h2 {
+    font-size: 2.25rem;
+    line-height: 1.15;
+    max-width: 650px;
+}
+
+p {
+    max-width: 560px;
+}
+
+/* Textos de ayuda contextual */
+.texto-apoyo {
+    max-width: 420px;
+    font-size: 0.9rem;
+    color: var(--color-texto-suave);
+}
+
+/* Mensajes de validación: se rellenan con texto desde
+   state.js. role="alert" los anuncia a lectores de pantalla.
+   La clase .entrando (la gestiona state.js) hace que el
+   mensaje aparezca en fade, sin salto. */
+p[role="alert"] {
+    min-height: 1.5em; /* reserva espacio para evitar saltos de layout */
+    color: var(--color-error);
+    font-weight: 600;
+}
+
+p[role="alert"].entrando {
+    animation: aparecer 0.3s ease;
+}
+
+/* Resumen de la decisión (pantalla de reflexión) y mensaje de cierre */
+#resumen-decision,
+#cierre {
+    max-width: 560px;
+    padding: 0.75rem 1.25rem;
+    border-radius: 0.5rem;
+    background: rgba(255, 255, 255, 0.7);
+    font-style: italic;
+}
+
+#cierre {
+    font-style: normal;
+    font-weight: 600;
+    border-left: 4px solid var(--logo-blue);
+}
+
+

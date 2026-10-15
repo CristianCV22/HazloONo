@@ -1,0 +1,12 @@
+<!DOCTYPE html><html class="js"><head><style>
+:root { }
+body { --retardo-escena: 0.73s; }
+.r > * { animation: entrada 0.7s ease backwards; }
+.r > :where(:nth-child(1)) { animation-delay: calc(0.12s + var(--retardo-escena)); }
+.r > :nth-child(2) { animation-delay: calc(0.24s + var(--retardo-escena)); }
+@keyframes entrada { from { opacity:0 } to { opacity:1 } }
+</style></head><body class="js">
+<section class="r"><h2>H2</h2><p>P</p></section>
+<script>
+setTimeout(()=>{ const o1=getComputedStyle(document.querySelector('.r h2')).animationDelay; const o2=getComputedStyle(document.querySelector('.r p')).animationDelay; document.body.dataset.done='yes'; document.body.dataset.d1=o1; document.body.dataset.d2=o2;},50);
+</script></body></html>

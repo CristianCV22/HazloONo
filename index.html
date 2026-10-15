@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta
+        name="description"
+        content="Hazlo o No te ayuda a detenerte, pensar en las consecuencias y tomar decisiones con mayor claridad."
+    >
+    <!-- Color de la interfaz del navegador móvil -->
+    <meta name="theme-color" content="#F8FAFC">
+    <title>Hazlo o No | Piensa antes de decidir</title>
+    <!-- Favicon: el logotipo, fiel al de la página -->
+    <link rel="icon" href="assets/images/favicon.svg" type="image/svg+xml">
+    <!-- Marca el documento como "con JavaScript" ANTES de pintar:
+         activa el layout de pantalla fija. Sin JS, la página
+         fluye normalmente con scroll (degradado elegante). -->
+    <script>document.documentElement.classList.add('js');</script>
+    <link rel="stylesheet" href="styles/variables.css">
+    <link rel="stylesheet" href="styles/base.css">
+    <link rel="stylesheet" href="styles/components/header.css">
+    <link rel="stylesheet" href="styles/components/logo.css">
+    <link rel="stylesheet" href="styles/components/form.css">
+    <link rel="stylesheet" href="styles/components/buttons.css">
+    <link rel="stylesheet" href="styles/states.css">
+    <!-- Raíz de la aplicación: módulo ES (diferido,
+         con el DOM ya parseado). -->
+    <script type="module" src="scripts/main.js"></script>
+    <!-- Red de seguridad (degradación elegante):
+         los módulos ES exigen HTTP(S). Si se abre
+         el archivo directamente (file://), el
+         navegador bloquea el módulo (CORS) y la
+         app no arranca: entonces se quita la
+         marca .js y la página vuelve al layout
+         sin JavaScript (contenido completo,
+         legible, con scroll). El error event
+         degrada al instante; el script diferido
+         vigila que el módulo se haya evaluado
+         (si falló en runtime, degrada igual:
+         main.js marca window.hazloNoIniciado
+         al terminar de arrancar). -->
+    <script>
+    var moduloPrincipal = document.querySelector('script[type="module"][src]');
+    if (moduloPrincipal) {
+        moduloPrincipal.addEventListener('error', function () {
+            document.documentElement.classList.remove('js');
+        });
+    }
+    </script>
+    <script defer>
+    window.addEventListener('DOMContentLoaded', function () {
+        if (!window.hazloNoIniciado) {
+            document.documentElement.classList.remove('js');
+        }
+    });
+    </script>
+</head>
+<body>
+
+    <!-- ============================================================
+         CABECERA: logotipo + MENÚ PRINCIPAL
+         - Logotipo interactivo (SVG inline: la aguja se controla
+           con CSS/JS). Es decorativo: el <h1> es su texto.
+         - Menú: Ayuda y Historial (diálogos nativos <dialog>) y Reiniciar.
+         ============================================================ -->
+    <header>
+        <a href="index.html" aria-label="Hazlo o No, página de inicio">
+            <svg
+                class="logo"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 500 500"
+                aria-hidden="true"
+                focusable="false"
+            >
+                <!-- Documentación del diseño (no se anuncia: el SVG
+                     es aria-hidden y el <h1> es la etiqueta. Si el
+                     logo se reutiliza algún día sin aria-hidden,
+                     esto lo hace accesible automáticamente). -->
+                <title>Hazlo o No — rueda de decisión</title>
+                <desc>Dos arcos, azul y naranja, forman una rueda con una
+                      aguja central. La aguja gira a la izquierda para
+                      «no hacerlo» y a la derecha para «hacerlo».</desc>
+
+                <!-- DEFINICIONES (reutilización):
+                     El arco se define UNA vez y se usa dos veces
+                     (el naranja es espejo del azul con <use>).
+                     Mantenible: cambiar el arco cambia ambos
+                     lados a la vez. Los degradados dan profundidad
+                     sutil; sus colores se definen en CSS. -->
+                <defs>
+                    <path id="arco-rueda"
+                          d="M 170 120 A 150 150 0 0 0 170 380"
+                          fill="none"
+                          stroke-width="28"
+                          stroke-linecap="round"/>
+                    <linearGradient id="grad-azul" x1="0" y1="0" x2="0" y2="1">
+                        <stop class="grad-azul-inicio" offset="0"/>
+                        <stop class="grad-azul-medio" offset="0.55"/>
+                        <stop class="grad-azul-fin" offset="1"/>
+                    </linearGradient>
+                    <linearGradient id="grad-naranja" x1="0" y1="0" x2="0" y2="1">
+                        <stop class="grad-naranja-inicio" offset="0"/>
+                        <stop class="grad-naranja-medio" offset="0.55"/>
+                        <stop class="grad-naranja-fin" offset="1"/>
+                    </linearGradient>
+                    <!-- Brillo sutil del centro de la aguja -->
+                    <radialGradient id="grad-centro" cx="0.35" cy="0.3" r="0.95">
+                        <stop class="grad-centro-inicio" offset="0"/>
+                        <stop class="grad-centro-fin" offset="1"/>
+                    </radialGradient>
+                </defs>
+
+                <!-- ESTRUCTURA EXTERIOR: la rueda de decisión.
+                     Escala de grosores del logo:
+                     28 anillo · 12 ejes · 8 marcadores ·
+                     6 aguja · 4 centro y anillo interior -->
+                <g class="ring">
+                    <!-- Arco azul (izquierda = no hacerlo) -->
+                    <use href="#arco-rueda" class="ring-blue"/>
+                    <!-- Arco naranja (derecha = hacerlo): espejo -->
+                    <use href="#arco-rueda" class="ring-orange"
+                         transform="translate(500 0) scale(-1 1)"/>
+                </g>
+
+                <!-- ONDA DE DECISIÓN: un pulso único
+                     que expande desde la rueda al
+                     elegir (se activa con .hacerlo /
+                     .no-hacerlo y se reactiva al
+                     cambiar de opción). -->
+                <circle class="pulso-decision"
+                        cx="250" cy="250" r="170"
+                        stroke-width="5"/>
+
+                <!-- MARCADORES DE DIRECCIÓN: punta superior
+                     (azul) y punta inferior (naranja) -->
+                <g class="markers">
+                    <polygon class="marca-superior"
+                             points="250,48 222,100 278,100"
+                             stroke-width="8"
+                             stroke-linejoin="round"/>
+                    <polygon class="marca-inferior"
+                             points="250,452 222,400 278,400"
+                             stroke-width="8"
+                             stroke-linejoin="round"/>
+                </g>
+
+                <!-- REFERENCIAS LATERALES: ejes de la rueda -->
+                <g class="marks">
+                    <line class="eje-izquierdo"
+                          x1="135" y1="250" x2="165" y2="250"
+                          stroke-width="12"
+                          stroke-linecap="round"/>
+                    <line class="eje-derecho"
+                          x1="335" y1="250" x2="365" y2="250"
+                          stroke-width="12"
+                          stroke-linecap="round"/>
+                </g>
+
+                <!-- AGUJA: el indicador de todo el
+                     proceso y el dilema encarnado.
+                     Gira según el PASO (.paso-0 …
+                     .paso-4) y según la DECISIÓN
+                     (.reflexion / .no-hacerlo /
+                     .hacerlo). En reflexión está
+                     DIVIDIDA (mitad azul, mitad
+                     naranja: las dos posibilidades
+                     vivas); al decidir se viste del
+                     color elegido y su cola se
+                     desvanece. .needle-position
+                     fija el ángulo y .needle oscila
+                     suavemente alrededor de él. -->
+                <g class="needle-position">
+                    <g class="needle">
+                        <polygon class="needle-blue"
+                                 points="250,130 272,240 250,250 228,240"
+                                 stroke-width="6"
+                                 stroke-linejoin="round"/>
+                        <polygon class="needle-orange"
+                                 points="250,370 272,260 250,250 228,260"
+                                 stroke-width="6"
+                                 stroke-linejoin="round"/>
+                        <circle class="needle-center"
+                                cx="250" cy="250" r="18"
+                                stroke-width="4"/>
+                    </g>
+                </g>
+
+                <!-- REFERENCIA INTERIOR: anillo sutil que también
+                     responde al estado (variables) -->
+                <circle class="inner-ring"
+                        cx="250" cy="250" r="105"
+                        fill="none"
+                        stroke-width="4"
+                        opacity="0.18"/>
+            </svg>
+            <h1>Hazlo o No</h1>
+        </a>
+
+        <!-- MENÚ PRINCIPAL -->
+        <nav aria-label="Menú principal">
+            <button type="button" data-menu-ayuda>Ayuda</button>
+            <button type="button" data-menu-historial>Historial</button>
+            <button type="button" data-menu-reiniciar data-secundario>Reiniciar</button>
+        </nav>
+    </header>
+
+    <main>
+        <!-- ============================================================
+             INDICADOR DE PROGRESO
+             5 pasos; el activo lleva aria-current="step".
+             Oculto en la bienvenida (JS lo maneja con `hidden`).
+             ============================================================ -->
+        <nav aria-label="Progreso de la reflexión" hidden>
+            <ol>
+                <li aria-current="step">Bienvenida</li>
+                <li>Decisión</li>
+                <li>Consecuencias</li>
+                <li>Reflexión</li>
+                <li>Elección</li>
+                <li>Cierre</li>
+            </ol>
+        </nav>
+
+        <!-- ============================================================
+             FORMULARIO DE REFLEXIÓN
+             Una <section> por pantalla. Con JS, las secciones se
+             superponen en pantalla fija y solo la que tiene la
+             clase .activa es visible (transiciones direccionales).
+             Sin JS, todas se muestran en flujo normal (scroll).
+             novalidate: la validación la hace el módulo
+             form.js con mensajes accesibles en <p role="alert">.
+             ============================================================ -->
+        <form id="reflexion" novalidate>
+
+            <!-- ── PASO 1 · BIENVENIDA (dos tiempos) ───────────── -->
+            <!-- Tiempo 1: la invitación. Tiempo 2: el umbral,
+                 una pausa consciente antes de empezar
+                 (1.1.1): el clic se convierte en
+                 reflexión sobre el ritmo. -->
+            <section aria-labelledby="titulo-bienvenida" class="activa">
+                <!-- Tiempo 1: la invitación -->
+                <div class="bienvenida-inicial">
+                    <h2 id="titulo-bienvenida">Antes de decidir, detente un momento.</h2>
+                    <p>Mira más allá del momento y explora las consecuencias de hacer o no hacer eso que estás considerando.</p>
+                    <fieldset class="emociones-opcion">
+                        <legend>¿Cómo te sientes al pensar en esto? <span class="texto-apoyo">(opcional)</span></legend>
+                        <div class="emociones">
+                            <button type="button" data-emocion="miedo" aria-pressed="false">Miedo</button>
+                            <button type="button" data-emocion="ilusion" aria-pressed="false">Ilusión</button>
+                            <button type="button" data-emocion="duda" aria-pressed="false">Duda</button>
+                            <button type="button" data-emocion="calma" aria-pressed="false">Calma</button>
+                        </div>
+                    </fieldset>
+                    <button type="button" data-empezar>Comienza la reflexión <span aria-hidden="true">→</span></button>
+                    <p class="texto-apoyo">Una reflexión breve para tomar tu decisión con mayor claridad. Te ayuda a ver cada opción con claridad.</p>
+                </div>
+                <!-- Tiempo 2: el umbral (pausa consciente) -->
+                <div class="bienvenida-umbral" hidden>
+                    <div class="anillo-respiracion" aria-hidden="true"></div>
+                    <!-- Modo normal del umbral -->
+                    <div class="umbral-normal">
+                        <h3 id="titulo-umbral">Esto no es un sprint</h3>
+                        <p>Tómate el tiempo que necesites: cada paso te invita a detenerse un momento. La claridad llega cuando bajamos el ritmo.</p>
+                        <button type="button" data-avanzar>Comenzar cuando quieras</button>
+                        <button type="button" data-respirar data-secundario>
+                            <span class="punto-respiracion" aria-hidden="true"></span>
+                            Respirar conmigo
+                        </button>
+                        <p class="texto-apoyo">Tu avance se guarda solo: puedes cerrar la página y retomarlo cuando quieras.</p>
+                        <button type="button" data-volver class="boton-texto">← Volver</button>
+                    </div>
+                    <!-- Modo respiración guiada (1.1.2): 3 ciclos 4-4-4 -->
+                    <div class="umbral-respiracion" hidden>
+                        <p id="fase-respiracion" role="status">Inhala</p>
+                        <p class="cuenta-respiracion" aria-hidden="true">4</p>
+                        <p class="ciclo-respiracion" aria-hidden="true">Ciclo 1 de 3</p>
+                        <button type="button" data-saltar data-secundario>Saltar</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ── PASO 2 · PREGUNTA INICIAL ───────────────────── -->
+            <section aria-labelledby="titulo-decision">
+                <h2 id="titulo-decision">¿Qué decisión tienes que tomar?</h2>
+                <label for="decision">Escribe la decisión que estás considerando</label>
+                <textarea
+                    id="decision"
+                    name="decision"
+                    rows="4"
+                    required
+                    placeholder="Ej.: estudiar para el examen de mañana"
+                ></textarea>
+                <p class="texto-apoyo">Reflexiona sobre lo que quieres hacer en esta situación.</p>
+                <p role="alert"></p>
+                <button type="button" data-retroceder data-secundario>← Anterior</button>
+                <button type="button" data-avanzar>Continuar <span aria-hidden="true">→</span></button>
+            </section>
+
+            <!-- ── PASO 3 · CONSECUENCIAS (hacer / no hacer) ───── -->
+            <section aria-labelledby="titulo-consecuencias">
+                <h2 id="titulo-consecuencias">Contempla las dos caras de tu decisión</h2>
+
+                <fieldset>
+                    <legend>¿Qué podría pasar si decides hacerlo?</legend>
+                    <label for="consecuencias-hacer">Consecuencias de hacerlo</label>
+                    <textarea
+                        id="consecuencias-hacer"
+                        name="consecuenciasHacer"
+                        rows="3"
+                        required
+                        placeholder="Ej.: aprobaré, me sentiré tranquilo, pero perderé tiempo libre hoy"
+                    ></textarea>
+                    <p class="texto-apoyo">Piensa más allá del momento. ¿Qué consecuencias positivas o negativas podrían aparecer después?</p>
+                </fieldset>
+
+                <fieldset>
+                    <legend>¿Qué podría pasar si decides no hacerlo?</legend>
+                    <label for="consecuencias-no-hacer">Consecuencias de no hacerlo</label>
+                    <textarea
+                        id="consecuencias-no-hacer"
+                        name="consecuenciasNoHacer"
+                        rows="3"
+                        required
+                        placeholder="Ej.: evitaré el esfuerzo ahora, pero arriesgo el resultado"
+                    ></textarea>
+                    <p class="texto-apoyo">Piensa en lo que podrías ganar, perder, evitar o descubrir si decides no hacerlo.</p>
+                </fieldset>
+
+                <p role="alert"></p>
+                <button type="button" data-retroceder data-secundario>← Anterior</button>
+                <button type="button" data-avanzar>Continuar <span aria-hidden="true">→</span></button>
+            </section>
+
+            <!-- ── PASO 4 · REFLEXIÓN (lo importante + resumen) ─── -->
+            <section aria-labelledby="titulo-reflexion">
+                <h2 id="titulo-reflexion">Reflexiona sobre lo que importa</h2>
+                <!-- Resumen de la decisión, lo escribe form.js al llegar -->
+                <p id="resumen-decision" aria-live="polite"></p>
+
+                <fieldset>
+                    <legend>¿Qué consecuencias son más importantes para ti?</legend>
+                    <label for="consecuencias-importantes">Las consecuencias más importantes</label>
+                    <textarea
+                        id="consecuencias-importantes"
+                        name="consecuenciasImportantes"
+                        rows="3"
+                        required
+                        placeholder="Ej.: mi salud y la tranquilidad de mi familia"
+                    ></textarea>
+                    <p class="texto-apoyo">Reflexiona sobre lo que es más relevante para ti en esta situación.</p>
+                </fieldset>
+
+                <fieldset>
+                    <legend>¿Qué ganarías y qué sacrificarías con tu decisión?</legend>
+                    <label for="ganancias-sacrificios">Ganancias y sacrificios</label>
+                    <textarea
+                        id="ganancias-sacrificios"
+                        name="gananciasYSacrificios"
+                        rows="3"
+                        required
+                        placeholder="Ej.: ganaré claridad y descanso; sacrifico una noche de ocio"
+                    ></textarea>
+                    <p class="texto-apoyo">Piensa en lo que podrías obtener y lo que tendrías que dejar de lado.</p>
+                </fieldset>
+
+                <p role="alert"></p>
+                <button type="button" data-retroceder data-secundario>← Anterior</button>
+                <button type="button" data-avanzar>Continuar <span aria-hidden="true">→</span></button>
+            </section>
+
+            <!-- ── PASO 5 · ELECCIÓN FINAL ─────────────────────── -->
+            <section aria-labelledby="titulo-eleccion">
+                <h2 id="titulo-eleccion">Decide con claridad</h2>
+
+                <fieldset>
+                    <legend>¿Cuál es tu elección final?</legend>
+                    <p class="texto-apoyo">Después de reflexionar sobre las consecuencias, ¿qué decisión tomarás? No hay una opción correcta: solo tu decisión.</p>
+                    <!-- Radios semánticos: al marcarlos, la aguja del
+                         logo y el ambiente cambian (ver scripts/) -->
+                    <label>
+                        <input type="radio" name="eleccion" value="no-hacerlo" required>
+                        <span>No hacerlo</span>
+                    </label>
+                    <label>
+                        <input type="radio" name="eleccion" value="hacerlo">
+                        <span>Hacerlo</span>
+                    </label>
+                </fieldset>
+
+                <label for="motivo">¿Cuál es el motivo de tu elección?</label>
+                <textarea
+                    id="motivo"
+                    name="motivo"
+                    rows="3"
+                    required
+                    placeholder="Ej.: porque mi tranquilidad vale más que una noche de ocio"
+                ></textarea>
+                <p class="texto-apoyo">Reflexiona sobre por qué tomaste esa decisión y qué te llevó a ella.</p>
+
+                <p role="alert"></p>
+                <button type="button" data-retroceder data-secundario>← Anterior</button>
+                <button type="button" data-terminar>Terminar reflexión</button>
+            </section>
+
+            <!-- ── CIERRE · RESUMEN Y MENSAJE NEUTRO ───────────── -->
+            <section aria-labelledby="titulo-cierre">
+                <h2 id="titulo-cierre">Tu reflexión está completa</h2>
+                <!-- Resumen final, lo escribe form.js -->
+                <p id="cierre" aria-live="polite"></p>
+                <p class="frase-cierre">Decidir también es elegir qué consecuencias aceptas.</p>
+                <p class="texto-apoyo">Sea cual sea tu camino, decidiste con claridad. ¿Quieres revisarlo? Puedes modificar tu elección.</p>
+                <button type="button" data-retroceder data-secundario>← Modificar mi elección</button>
+                <button type="button" data-reiniciar>Nueva reflexión</button>
+            </section>
+
+        </form>
+
+        <!-- ============================================================
+             PIE DE PÁGINA: dónde está el usuario + consejo
+             rotativo (da vida a la pantalla entre pasos).
+             ============================================================ -->
+        <footer>
+            <p id="pie-paso" aria-live="polite">Bienvenida</p>
+            <p id="pie-consejo">«Antes de decidir, detente un momento.»</p>
+        </footer>
+    </main>
+
+    <!-- ============================================================
+         DIÁLOGO DE AYUDA (menú principal → "Ayuda")
+         <dialog> nativo: foco atrapado, se cierra con Esc y
+         con el botón (form method="dialog").
+         ============================================================ -->
+    <dialog id="ayuda" aria-labelledby="titulo-ayuda">
+        <h2 id="titulo-ayuda">Cómo funciona Hazlo o No</h2>
+        <p class="texto-apoyo" id="aviso-almacenamiento" role="status" hidden>Tu navegador no permite guardar la reflexión: se perderá al cerrar la pestaña. Puedes usar Hazlo o No igualmente.</p>
+        <p>Hazlo o No es un <strong>momento de pausa</strong> antes de decidir. No juzgamos tu elección: solo te ayudamos a ver las dos caras de la misma moneda.</p>
+        <ol>
+            <li><strong>Decisión</strong>: escribe qué estás considerando.</li>
+            <li><strong>Consecuencias</strong>: imagina qué pasa si lo haces y si no lo haces.</li>
+            <li><strong>Reflexión</strong>: qué es importante para ti y qué ganarías o sacrificarías.</li>
+            <li><strong>Elección</strong>: elige «Hacerlo» o «No hacerlo» y explica tu motivo.</li>
+        </ol>
+        <p>No hay respuesta correcta. Tómate el tiempo que necesites: cada pausa cuenta.</p>
+        <p>La <strong>aguja del logotipo</strong> es tu compañera: barre según el paso, se inclina hacia la opción que estás considerando y se viste del color de tu elección.</p>
+
+        <fieldset>
+            <legend>Animaciones</legend>
+            <p class="texto-apoyo" id="nota-animacion" hidden>Tu sistema tiene las animaciones reducidas: por eso todo entra al instante. Elige «Activar» para ver la coreografía completa (recarga la página para ver también la apertura).</p>
+            <label>
+                <input type="radio" name="animacion" value="seguir" checked>
+                <span>Seguir el sistema</span>
+            </label>
+            <label>
+                <input type="radio" name="animacion" value="activar">
+                <span>Activar</span>
+            </label>
+            <label>
+                <input type="radio" name="animacion" value="desactivar">
+                <span>Desactivar</span>
+            </label>
+        </fieldset>
+
+        <form method="dialog">
+            <button type="submit">Entendido</button>
+        </form>
+    </dialog>
+
+    <!-- ============================================================
+         DIÁLOGO DEL HISTORIAL (menú principal → "Historial")
+         <dialog> nativo: foco atrapado, se cierra con Esc y
+         con el botón (form method="dialog"). La lista la
+         renderiza JS al abrir (T6): más reciente primero.
+         ============================================================ -->
+    <dialog id="historial" aria-labelledby="titulo-historial">
+        <h2 id="titulo-historial">Tus reflexiones pasadas</h2>
+        <p id="historial-vacio" hidden>Aún no hay reflexiones terminadas: cuando completes una, aparecerá aquí para releerla cuando quieras.</p>
+        <ol id="lista-historial" hidden></ol>
+        <p class="texto-apoyo" id="aviso-historial" role="status" hidden></p>
+        <form method="dialog">
+            <button type="button" data-borrar-historial data-secundario>Borrar historial</button>
+            <button type="submit">Cerrar</button>
+        </form>
+    </dialog>
+</body>
+</html>
