@@ -37,6 +37,7 @@ module.exports = [
                 __dirname: 'readonly',
                 __filename: 'readonly',
                 Buffer: 'readonly',
+                URL: 'readonly',
                 // WebSocket global de Node (las sondas hablan CDP con él)
                 WebSocket: 'readonly'
             }

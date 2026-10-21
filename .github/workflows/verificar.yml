@@ -1,0 +1,48 @@
+name: Verificar
+
+# En cada push y en cada PR: las cuatro comprobaciones del
+# proyecto. Sin `npm install`: el proyecto NO tiene dependencias,
+# así que la CI es tan ligera como el proyecto (y no puede
+# romperse por un cambio en el árbol de dependencias).
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Cancela la ejecución anterior del mismo ref: no hace falta
+# esperar dos minutos a que termine una versión obsoleta.
+concurrency:
+  group: verificar-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  verificar:
+    name: Pruebas, grafo y linters
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Código
+        uses: actions/checkout@v4
+
+      - name: Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Pruebas funcionales
+        run: npm test
+
+      - name: Grafo de módulos (acíclico)
+        run: npm run test:grafo
+
+      - name: Linter de JavaScript
+        run: npm run lint
+
+      - name: Linter de CSS
+        run: npm run lint:css

@@ -1,0 +1,56 @@
+name: Publicar
+
+# Publica la web estática en GitHub Pages con cada push a main.
+# El sitio es el propio proyecto (HTML + CSS + JS sin
+# dependencias): no hay compilación, ni bundler, ni build.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Una publicación cada vez: si hay dos pushes seguidos, el
+# segundo cancela al primero.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  publicar:
+    name: Publicar en GitHub Pages
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Código
+        uses: actions/checkout@v4
+
+      - name: Configurar Pages
+        uses: actions/configure-pages@v5
+
+      - name: Preparar el sitio
+        run: |
+          # Sólo se publica lo que es la web. Ni el código fuente,
+          # ni las pruebas, ni los workflows: el repositorio se lee
+          # en GitHub, la web se sirve desde aquí.
+          mkdir -p _site
+          cp index.html _site/
+          cp -r styles scripts assets _site/
+
+      - name: Subir el artefacto
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - id: deployment
+        name: Publicar
+        uses: actions/deploy-pages@v4

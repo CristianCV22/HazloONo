@@ -1,13 +1,33 @@
 {
   "name": "hazlo-o-no",
   "version": "1.0.0",
-  "description": "Hazlo o No: una pausa consciente para tomar decisiones con mayor claridad.",
+  "description": "Hazlo o No: una pausa consciente para tomar decisiones con mayor claridad. HTML, CSS y JavaScript sin dependencias; todo se guarda en el navegador.",
   "private": true,
+  "keywords": [
+    "html",
+    "css",
+    "javascript",
+    "accessibility",
+    "privacy-first",
+    "no-dependencies",
+    "progressive-enhancement",
+    "decision-making"
+  ],
+  "homepage": "https://cristiancv22.github.io/HazloONo/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/CristianCV22/HazloONo.git"
+  },
+  "bugs": {
+    "url": "https://github.com/CristianCV22/HazloONo/issues"
+  },
   "scripts": {
     "test": "node tests/flujo.test.js",
     "test:grafo": "node pruebas/verificar-grafica.js",
     "lint": "npx --yes eslint@9 .",
     "lint:css": "npx --yes stylelint@16 \"styles/**/*.css\"",
+    "verificar": "npm test && npm run test:grafo && npm run lint && npm run lint:css",
+    "capturas": "node pruebas/capturas.js",
     "serve": "python -m http.server 8000"
   },
   "license": "MIT"
