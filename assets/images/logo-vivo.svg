@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="500" height="500" role="img" aria-labelledby="t d">
+  <title id="t">Hazlo o No</title>
+  <desc id="d">La rueda de decisión de Hazlo o No: dos arcos, azul y naranja, con una aguja central partida en dos mitades.</desc>
+
+  <!--
+    La rueda se dibuja, las piezas aparecen en cascada y la aguja
+    viaja: el mismo guion que la página, en miniatura.
+
+    El estado BASE es el logo completo (visible y estático): la
+    animación sólo lo revela. Así, si el navegador no anima (o si
+    la imagen se mira en un visor estático), el logo se ve entero.
+  -->
+  <style>
+    .arco {
+      fill: none;
+      stroke-width: 28;
+      stroke-linecap: round;
+      stroke-dasharray: 471.24;
+      stroke-dashoffset: 0;
+      animation: traza 1.8s ease-out .3s backwards;
+    }
+    .azul    { stroke: url(#gAzul);    animation-delay: .3s; }
+    .naranja { stroke: url(#gNaranja); animation-delay: .6s; }
+
+    .marcadores { opacity: 1; animation: aparece .8s ease 1s backwards; }
+    .ejes      { opacity: 1; animation: aparece .8s ease 1.3s backwards; }
+    .anillo    { opacity: .18; animation: apareceAnillo .8s ease 1.9s backwards; }
+    .centro    { opacity: 1; animation: aparece .8s ease 2.2s backwards; }
+
+    .aguja-posicion {
+      transform: rotate(-30deg);
+      transform-origin: 250px 250px;
+      animation: viaje 6s ease-in-out 2.6s 1 backwards;
+    }
+    .aguja {
+      transform-origin: 250px 250px;
+      animation: oscila 5s ease-in-out 8.6s infinite;
+    }
+
+    @keyframes traza { from { stroke-dashoffset: 471.24; } to { stroke-dashoffset: 0; } }
+    @keyframes aparece { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes apareceAnillo { from { opacity: 0; } to { opacity: .18; } }
+    @keyframes viaje {
+      0%   { opacity: 0; transform: rotate(-30deg); }
+      8%   { opacity: 1; }
+      18%  { transform: rotate(-45deg); }
+      42%  { transform: rotate(45deg); }
+      68%  { transform: rotate(-12deg); }
+      100% { opacity: 1; transform: rotate(-30deg); }
+    }
+    @keyframes oscila {
+      0%, 100% { transform: rotate(-1.5deg); }
+      50%      { transform: rotate(1.5deg); }
+    }
+
+    /* Con movimiento reducido: el logo se ve quieto y completo. */
+    @media (prefers-reduced-motion: reduce) {
+      .arco, .marcadores, .ejes, .anillo, .centro,
+      .aguja-posicion, .aguja { animation: none; }
+    }
+  </style>
+
+  <defs>
+    <linearGradient id="gAzul" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0C2F65"/>
+      <stop offset="0.55" stop-color="#094584"/>
+      <stop offset="1" stop-color="#2563EB"/>
+    </linearGradient>
+    <linearGradient id="gNaranja" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#C2410C"/>
+      <stop offset="0.55" stop-color="#F97316"/>
+      <stop offset="1" stop-color="#EA580C"/>
+    </linearGradient>
+    <radialGradient id="gCentro" cx="0.35" cy="0.3" r="0.95">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#E2E8F0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- La rueda: el arco azul y su espejo naranja -->
+  <path class="arco azul" d="M 170 120 A 150 150 0 0 0 170 380"/>
+  <path class="arco naranja" d="M 170 120 A 150 150 0 0 0 170 380"
+        transform="translate(500 0) scale(-1 1)"/>
+
+  <!-- Referencia interior -->
+  <circle class="anillo" cx="250" cy="250" r="105" fill="none" stroke="#0C2F65" stroke-width="4"/>
+
+  <!-- Marcadores de dirección -->
+  <g class="marcadores">
+    <polygon points="250,48 222,100 278,100" fill="#0C2F65"/>
+    <polygon points="250,452 222,400 278,400" fill="#C2410C"/>
+  </g>
+
+  <!-- Ejes laterales -->
+  <g class="ejes" stroke-width="12" stroke-linecap="round">
+    <line x1="135" y1="250" x2="165" y2="250" stroke="#094584"/>
+    <line x1="335" y1="250" x2="365" y2="250" stroke="#F97316"/>
+  </g>
+
+  <!-- La aguja: el dilema, partida en dos mitades -->
+  <g class="aguja-posicion">
+    <g class="aguja">
+      <polygon points="250,130 272,240 250,250 228,240" fill="#094584"/>
+      <polygon points="250,370 272,260 250,250 228,260" fill="#F97316"/>
+      <circle class="centro" cx="250" cy="250" r="18" fill="url(#gCentro)" stroke="#0C2F65" stroke-width="4"/>
+    </g>
+  </g>
+</svg>
