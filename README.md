@@ -21,18 +21,26 @@ HazloONo/
 │   └── states.css         # Modificadores de estado (variables contextuales) y accesibilidad
 ├── scripts/           # JS en módulos ES (type="module")
 │   ├── main.js          # raíz: importa, inicializa y arranca
-│   ├── utils.js         # almacenamiento local, preferencia de animaciones, borrador
-│   ├── state.js         # estado global, navegación, historial
+│   ├── datos.js         # estado y referencias al DOM (no importa nada)
+│   ├── almacen.js       # almacenamiento local y preferencia de animaciones
+│   ├── state.js         # navegación, borrador e historial
 │   └── components/
 │       ├── logo.js          # aguja y ambiente (actualizarLogo / actualizarAmbiente)
-│       ├── form.js          # flujo: umbral, respiración, validación, cierre (initForm)
+│       ├── umbral.js        # umbral de la bienvenida y respiración guiada
+│       ├── form.js          # validación, cierre, etiquetado emocional (initForm)
 │       └── modal.js         # diálogos Ayuda e Historial (initModal)
 ├── assets/
 │   └── images/          # fondo.jpg, favicon.svg
 ├── tests/             # Pruebas (Node.js)
 │   └── flujo.test.js    # Prueba funcional del flujo completo
-├── pruebas/           # Sondas de verificación en navegador real (CDP)
+├── pruebas/           # Verificación en navegador real (CDP)
+│   ├── navegador.js       # rutas portables (navegador, puertos, perfiles)
+│   ├── sonda-cdp.js       # coreografía de apertura, muestreo de estilos
+│   ├── verificar-*.js     # anulación de movimiento, borrador, grafo de módulos
+│   └── probe-*.js         # sondas puntuales (fondo, trazo, foco, emoción…)
 ├── package.json
+├── eslint.config.js   # ESLint (formato plano) — opcional, vía npx
+├── stylelint.config.js # Stylelint (formato plano) — opcional, vía npx
 ├── .gitignore
 └── README.md
 ```
@@ -41,11 +49,31 @@ HazloONo/
 > sin framework y sin bundler. `main.js` es la raíz: importa los
 > módulos, inicializa los componentes (`initForm()`, `initModal()` —
 > cada uno registra sus propios eventos dentro de su ámbito) y
-> arranca la app en `DOMContentLoaded`. La dirección de las
-> dependencias es: `main` → `componentes` → `state` → `utils`.
-> El estado central (`respuestas`, `pasoActual`) vive en `state.js`;
-> cualquier módulo lo consulta y la persistencia la encapsula
-> `utils.js`.
+> arranca la app en `DOMContentLoaded`.
+>
+> El grafo de módulos es **acíclico** (lo comprueba
+> `npm run test:grafo`): las dependencias van siempre hacia abajo,
+> así que el orden de evaluación de los módulos nunca importa.
+>
+> ```
+> datos.js ─┬─► components/logo.js ──┐
+>           │                        │
+>           ├─► components/umbral.js ─┤
+>           │                        ▼
+>           └───────────────────► state.js ─► components/form.js ─┐
+> almacen.js ────────────────────────┘       components/modal.js ┴─► main.js
+> ```
+>
+> - `datos.js` y `almacen.js` son **hojas**: no importan nada. El
+>   estado central (`respuestas`, `pasoActual`) y las referencias al
+>   DOM viven en `datos.js`; el acceso al almacenamiento y la
+>   preferencia de animaciones, en `almacen.js`.
+> - `state.js` coordina: navegación, borrador e historial.
+> - Los componentes son **vistas y eventos**: no dependen de
+>   `state.js` en la otra dirección, así que no hay ciclos.
+> - `main.js` es el único que conoce a todos: ahí se cablea lo que
+>   cruza capas (por ejemplo, la vista del resumen del cierre al
+>   restaurar un borrador).
 
 ## 🧩 Arquitectura JavaScript
 
@@ -53,21 +81,27 @@ HazloONo/
   el navegador resuelve el grafo. Sin ámbito global compartido:
   las dependencias son explícitas (lo que antes eran "globales
   invisibles" entre scripts clásicos).
-- **Estado central** (`state.js`): `respuestas`, `pasoActual`,
-  `transicionando`, `secciones`… Exporta el estado y la navegación
-  (`mostrarPaso`, `transicionarA`). Los datos mutables que un
-  componente necesita cambiar (p. ej. `umbralVisible`) viven en
-  su componente: un módulo no puede reasignar el `let` de otro.
+- **Estado central** (`datos.js`): `respuestas`, `pasoActual`,
+  `transicionando`, `secciones`… Es una hoja del grafo: cualquier
+  módulo lo consulta sin crear ciclos. El estado mutable se
+  cambia con funciones explícitas (`fijarPasoActual`,
+  `fijarTransicionando`): un módulo no puede reasignar el `let`
+  de otro.
+- **Coordinación** (`state.js`): la navegación (`mostrarPaso`,
+  `transicionarA`), el borrador y el historial.
 - **Componentes vanilla**: `form.js` y `modal.js` exponen
   `initForm()` / `initModal()` — reciben su ámbito del DOM y
   registran los listeners dentro de él. Ningún listener queda
   activo hasta que `main.js` inicializa el componente.
 - **Vistas sin lógica** (`logo.js`): solo responde al estado
   (`actualizarLogo`, `actualizarAmbiente`); no registra eventos.
+- **Componentes con estado propio** (`umbral.js`): su visibilidad
+  y la guía de respiración viven aquí, no en el estado global.
 - **Persistencia** (en `localStorage`, sin cifrar — solo del
   usuario, nunca sale del navegador):
-  - `hazlono-borrador` — reflexión en curso (paso + respuestas,
-    guardada 300 ms después de la última tecla y al cerrar).
+  - `hazlono-borrador` — reflexión en curso (paso + respuestas +
+    identificador de la reflexión, guardada 300 ms después de la
+    última tecla y al cerrar).
   - `hazlono-historial` — reflexiones terminadas (máx. 50).
   - `hazlono-animacion` — preferencia de animaciones.
   - `hazlono-prueba` — clave temporal para comprobar que el
@@ -109,6 +143,21 @@ Ejecutar las pruebas funcionales (sin dependencias):
 node tests/flujo.test.js   # o: npm test
 ```
 
+Comprobar que el grafo de importaciones de los módulos
+es completo y consistente:
+
+```bash
+node pruebas/verificar-grafica.js   # o: npm run test:grafo
+```
+
+Linter opcional (se usa `npx`: no instala nada en el
+proyecto, sólo lo descarga en la caché de npm):
+
+```bash
+npm run lint        # ESLint (formato plano)
+npm run lint:css    # Stylelint (formato plano)
+```
+
 Verificación visual real con el navegador (Edge/Chrome
 headless + CDP): las sondas `pruebas/sonda-cdp.js`
 (opciones: `default` | `no-preference` | `reduce`),
@@ -117,6 +166,12 @@ headless + CDP): las sondas `pruebas/sonda-cdp.js`
 computados en tiempo real y reportan el estado de la
 coreografía, las transiciones, la aguja y la
 persistencia.
+
+Las sondas son **portables**: el navegador, el puerto, la
+URL y la carpeta de perfiles se resuelven en
+`pruebas/navegador.js` y se pueden fijar con las
+variables de entorno `NAVEGADOR`, `PUERTO_SERVIDOR`,
+`URL_PAGINA` y `CARPETA_PERFILES`.
 
 ## 🔄 Flujo de la reflexión (5 pasos)
 
@@ -134,6 +189,11 @@ respuestas intactas, cambias la opción (la
 aguja y el ambiente reaccionan al instante)
 y terminas de nuevo. Decidir es también
 reconsiderar — sin juicio.
+
+La reflexión conserva su **identidad**: al
+volver a terminar, la entrada del historial se
+**actualiza** en lugar de duplicarse. El
+historial refleja siempre tu última decisión.
 
 ## 🎯 Anatomía del logotipo (SVG)
 
@@ -211,11 +271,16 @@ Con JavaScript, la app ocupa **una sola pantalla** (`100dvh`, sin scroll):
   a segundo plano (compacto y centrado)
   con transición suave de 0.6 s.
 - Si el contenido no cabe (pantalla muy corta), la sección
-  hace scroll interno sin recortar (truco de flexbox con
+  hace scroll interno sin recortar: el contenido nunca se
+  encoge por debajo de su tamaño (truco de flexbox con
   pseudo-elementos).
 - **Sin JavaScript**: la página fluye normal con scroll
   (degradado elegante — el inline `<script>` de `<head>`
-  marca `document.documentElement` con `.js`).
+  marca `document.documentElement` con `.js`). La marca,
+  el menú y el pie aparecen **de inmediato**: la coreografía
+  de apertura es un enhancements, no un requisito. Un aviso
+  (`<noscript>`) explica que sin JS se puede leer y escribir,
+  pero no avanzar de paso ni guardar.
 
 ## 🎛️ Menú principal y pie de página
 
@@ -266,9 +331,16 @@ La primera pantalla encarna la filosofía del producto — calma, sin prisas.
 
 En los pasos siguientes, las entradas son rápidas y sobrias (la calma ya
 se estableció). Todo con `opacity` / `transform` / `stroke-dashoffset` /
-`filter` (GPU, 60 fps) y se desactiva por completo con
+`filter` — propiedades que el navegador puede interpolar en la GPU
+— y se desactiva por completo con
 `prefers-reduced-motion` (salvo que el usuario elija
 «Activar» — ver «Animaciones: tu preferencia»).
+
+> Excepción conocida: la deriva del ambiente (las manchas de
+> color del fondo) anima `background-position`, que **sí**
+> repinta. Es deliberado —un degradado que se desliza no se
+> puede mover con `transform` sin capas extra— y afecta a una
+> sola capa de fondo.
 
 ## 🎞️ Animaciones: tu preferencia
 
@@ -309,6 +381,10 @@ Tu reflexión **no se pierde** al cerrar la pestaña:
   guarda el borrador (`localStorage`, debounce de 300 ms).
   También al elegir, al avanzar y, como red de seguridad,
   al cerrar la pestaña.
+- **Red de seguridad en móvil**: además de `beforeunload`
+  (que iOS Safari ignora a menudo), el borrador se guarda
+  con `pagehide` y al pasar la pestaña a segundo plano
+  (`visibilitychange`): los últimos textos no se pierden.
 - **Retorno**: al volver, recuperas el mismo paso, con los
   campos rellenos y la aguja en posición. En el cierre, el
   resumen se rehace con tus respuestas.
@@ -328,6 +404,9 @@ terminadas, **la más reciente primero**:
 > miedo (12 de octubre de 2026)
 
 - Muestra la decisión, la elección, el motivo y la fecha.
+- Una reflexión es **una entrada**: si vuelves al cierre para
+  modificar tu elección, la entrada se actualiza (no se
+  duplica).
 - **«Borrar historial»** lo vacía: pide **doble pulsación**
   (sin `confirm()`) y se deshace solo en 4 s.
 - Con el historial vacío, un mensaje amable explica qué pasa.
@@ -353,15 +432,22 @@ mitad elegida de la rueda **brilla** (glow,
 un pulso firme con rebote (0.9 s).
 
 Todo con `opacity` / `transform` / `stroke-dashoffset` / `filter`
-(GPU, 60 fps) y se desactiva por completo con `prefers-reduced-motion`.
+— propiedades interpoladas por la GPU — y se desactiva por completo
+con `prefers-reduced-motion`.
 
 ## ♿ Accesibilidad
 
 - HTML5 semántico: `header`, `main`, `nav`, `section`, `fieldset`, `legend`, `label`
-- `aria-current="step"` en el indicador de progreso
+- `aria-current="step"` en el indicador de progreso (los 5
+  pasos del flujo; el cierre es un resumen, no un paso más)
 - `aria-live` para el resumen y `role="alert"` para errores de validación;
   `role="status"` para los avisos del historial y del almacenamiento
-- El foco se mueve al título de cada paso (lectores de pantalla)
+- Los errores de validación **nombran el campo** que falta
+  («Falta completar «Consecuencias de hacerlo».»), lo marcan con
+  `aria-invalid` y lo asocian a su aviso con `aria-describedby`
+- El foco se mueve al título de cada paso (lectores de pantalla).
+  Se aplaza al fotograma en que la sección ya es visible: con
+  `prefers-reduced-motion` el foco también llega.
 - Contraste WCAG AA (texto principal ~13:1,
   secundario ~7:1); el logo es marca
   (logotipo, exento de 1.4.11) y sus dos
@@ -463,3 +549,98 @@ al cerrar la pestaña. Pilares: **(1) Guardado**
   historial y degradación;
   auditoría de aria-live y cierre
   del documento.
+
+## 🩺 Auditoría de lectura y correcciones (T11)
+
+Una revisión completa del proyecto (HTML, CSS, JS y
+pruebas) detectó y corrigió los siguientes puntos, cada
+uno con su prueba de regresión o con verificación en
+navegador real.
+
+**Corrección (defectos comprobados)**
+
+- [x] **Pruebas portables**: la ruta del proyecto se
+  calcula desde el propio archivo (`__dirname`), así que
+  `npm test` funciona en cualquier sistema (antes
+  dependía de una ruta absoluta de Windows).
+- [x] **Foco al cambiar de paso**: el foco se aplaza al
+  fotograma en que la sección ya es visible. Antes, con
+  `prefers-reduced-motion` (o «Desactivar») el foco se
+  perdía en `<body>` y el lector de pantalla no
+  anunciaba el paso nuevo.
+- [x] **Sin solapamientos en pantallas bajas**: el
+  contenido de un paso ya no se encoge por debajo de su
+  tamaño; si no cabe, la sección hace scroll interno
+  (antes los textos se montaban unos sobre otros).
+- [x] **«Reiniciar» limpia todo**: también el estado
+  emocional (botones sin marcar y sin tinte).
+- [x] **El historial no se duplica**: una reflexión es
+  una entrada; si vuelves a modificarla, se actualiza.
+- [x] **Cierre de pestaña en móvil**: el borrador se
+  guarda también con `pagehide` y `visibilitychange`.
+- [x] **Fechas corruptas**: el historial descarta las
+  fechas inválidas (no aparece «Invalid Date»).
+
+**Accesibilidad y contenido**
+
+- [x] **La marca no tarda 3 s en aparecer**: la
+  coreografía de apertura va solo con JavaScript. Sin
+  él (o si el módulo no carga) la marca, el menú y el
+  pie se ven desde el primer pintado.
+- [x] **Aviso sin JavaScript**: un `<noscript>` explica
+  qué se puede y qué no se puede hacer.
+- [x] **Errores que nombran el campo**: «Falta completar
+  «Consecuencias de hacerlo».», con `aria-invalid` y
+  `aria-describedby` en el campo.
+- [x] **Indicador de progreso coherente**: los 5 pasos
+  del flujo (el cierre es un resumen, no un paso más).
+- [x] **Preferencia de animaciones antes de pintar**:
+  se aplica en el `<head>`, no al final de la carga.
+
+**Herramientas y limpieza**
+
+- [x] **Sondas portables**: `pruebas/navegador.js`
+  resuelve el navegador, el puerto, la URL y el perfil
+  (variables de entorno opcionales). Sin rutas absolutas.
+- [x] **Linter utilizable**: ESLint y Stylelint en
+  formato plano y autocontenido (`npm run lint`,
+  `npm run lint:css`; se ejecutan con `npx`, sin
+  dependencias en el proyecto).
+- [x] **Fichero huérfano eliminado**: `assets/fonts`
+  (copia de `favicon.svg`, sin usar en todo el
+  historial).
+- [x] **Documentación al día**: README, comentarios y
+  configuración de lint corregidos.
+
+Verificado con la suite funcional, el verificador del
+grafo de módulos, los dos linters y con capturas en
+navegador real (Firefox headless, con y sin movimiento
+reducido, y en el modo sin JavaScript).
+
+## 🧱 Grafo de módulos acíclico (T12)
+
+Antes, `state.js`, `utils.js` y `form.js` se importaban
+**entre sí** (tres ciclos). Funcionaba —los ciclos entre
+módulos ES sólo fallan si el orden de evaluación cambia—,
+ pero era una fragilidad latente: cualquier edición podía
+romper el arranque sin que nada lo indicara.
+
+Ahora el grafo es un **árbol** y `npm run test:grafo` lo
+comprueba (incluida la detección de ciclos):
+
+- `datos.js` — estado y referencias al DOM (hoja).
+- `almacen.js` — almacenamiento local y preferencias (hoja).
+- `components/logo.js`, `components/umbral.js` — vistas.
+- `state.js` — navegación, borrador e historial.
+- `components/form.js`, `components/modal.js` — eventos.
+- `main.js` — raíz: cablea las piezas.
+
+`utils.js` desaparece: su parte de almacenamiento pasa a
+`almacen.js` y la del borrador, a `state.js`.
+
+Además, la deriva del fondo (las manchas de color) se midió
+en vez de suponer: animar `background-position` **no** cuesta
+más que no animar nada (0 fotogramas perdidos, mismo coste
+de hilo principal que el control), así que se mantiene tal
+cual —cambiarlo exigiría añadir un elemento al HTML para
+un beneficio que no se mide.

@@ -6,14 +6,20 @@
    (que registran sus propios eventos)
    y arranca la aplicación.
 
+   Es el único módulo que conoce a todos
+   los demás: aquí se cablean las piezas
+   (por ejemplo, la vista del resumen del
+   cierre tras restaurar un borrador).
+
    Módulo ES (script type="module"):
    se ejecuta tras parsear el HTML
    (diferido), con el DOM listo.
    ========================================================================== */
 
-import { aplicarPreferenciaAnimacion, restaurarBorrador } from './utils.js';
-import { mostrarPaso } from './state.js';
-import { initForm, actualizarEmocionUI } from './components/form.js';
+import { aplicarPreferenciaAnimacion } from './almacen.js';
+import { pasoActual, secciones } from './datos.js';
+import { mostrarPaso, restaurarBorrador } from './state.js';
+import { initForm, actualizarEmocionUI, prepararCierre } from './components/form.js';
 import { initModal } from './components/modal.js';
 
 /**
@@ -40,7 +46,13 @@ function iniciar() {
     // se quedó (sin mover el foco).
     restaurarBorrador();
 
+    // La vista se sincroniza con el estado restaurado:
+    // el etiquetado emocional y, si la reflexión
+    // estaba en el cierre, su resumen.
     actualizarEmocionUI();
+    if (pasoActual === secciones.length - 1) {
+        prepararCierre();
+    }
 
     // Arranque completado: la red de seguridad
     // de index.html lo comprueba (si el módulo

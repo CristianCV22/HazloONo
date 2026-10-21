@@ -1,9 +1,15 @@
 const http = require('http');
 const { spawn } = require('child_process');
-const EDGE = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe';
-const PUERTO = 9338;
-const URL = 'http://localhost:8472/index.html';
-const PERFIL = 'C:\\Users\\valde\\AppData\\Local\\Temp\\opencode\\edge-op-' + Date.now();
+/* Rutas portables: el navegador, el puerto y la carpeta
+   temporal se resuelven aquí (ver pruebas/navegador.js). */
+const {
+    resolverNavegador, puertoServidor, urlPagina, perfilTemporal
+} = require('./navegador');
+const EDGE = resolverNavegador();
+const PUERTO = puertoServidor(9338);
+const URL = urlPagina('http://localhost:8472/index.html');
+const PERFIL = perfilTemporal('edge-op');
+
 function getJSON(path) {
   return new Promise((resolve, reject) => {
     const req = http.get({ host: '127.0.0.1', port: PUERTO, path }, (res) => {
@@ -37,7 +43,7 @@ async function main() {
   const nav = { id: ++idc, method: 'Page.navigate', params: { url: URL } };
   await enviar(nav);
   const script = "(() => { const h = document.querySelector('#reflexion section.activa h2'); const t = performance.now(); window._samples=[]; const iv = setInterval(()=>{ const o=getComputedStyle(h).opacity; window._samples.push(Math.round((performance.now()-t))+'ms op='+o); if (window._samples.length>=13) clearInterval(iv);}, 300); return 'started'; })()";
-  const mres = await evaluar(script);
+  await evaluar(script);
   // wait ~4 sec then read samples
   await esperar(4200);
   const s = await evaluar('JSON.stringify(window._samples)');

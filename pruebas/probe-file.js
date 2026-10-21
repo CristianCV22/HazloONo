@@ -1,11 +1,17 @@
 const http = require('http');
 const { spawn } = require('child_process');
-const EDGE = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe';
-const PUERTO = 9344;
+/* Rutas portables: el navegador, el puerto y la carpeta
+   temporal se resuelven aquí (ver pruebas/navegador.js). */
+const {
+    resolverNavegador, puertoServidor, urlArchivo, perfilTemporal
+} = require('./navegador');
+const EDGE = resolverNavegador();
+const PUERTO = puertoServidor(9344);
+const URL = urlArchivo('index.html');
+const PERFIL = perfilTemporal('edge-file');
 // Abrir el archivo DIRECTAMENTE (file://), como
 // haría un doble clic — sin servidor HTTP.
-const URL = 'file:///C:/Users/valde/OneDrive/Documentos/Proyectos/HazloONo/index.html';
-const PERFIL = 'C:\\Users\\valde\\AppData\\Local\\Temp\\opencode\\edge-file-' + Date.now();
+
 function getJSON(path) {
   return new Promise((resolve, reject) => {
     const req = http.get({ host: '127.0.0.1', port: PUERTO, path }, (res) => {

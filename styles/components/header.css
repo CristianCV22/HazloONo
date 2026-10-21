@@ -58,13 +58,18 @@ body.en-flujo h1 {
    superior derecha, fuera del flujo —
    el escenario es de la marca. Entra
    en fade al final de la apertura
-   (nada aparece de la nada). */
+   (nada aparece de la nada). Sin
+   JavaScript el menú aparece de
+   inmediato (degradación elegante). */
 header nav {
     display: flex;
     gap: 0.5rem;
     position: absolute;
     top: 0;
     right: 0;
+}
+
+.js header nav {
     animation: aparecer 0.8s ease 2.8s backwards;
 }
 
@@ -120,9 +125,13 @@ footer {
     gap: 1rem;
     font-size: 0.8rem;
     color: var(--color-texto-suave);
+}
 
-    /* Entra al final de la apertura:
-       nada aparece de la nada. */
+/* Entra al final de la apertura: nada
+   aparece de la nada. Sin JavaScript el
+   pie se ve de inmediato (degradación
+   elegante). */
+.js footer {
     animation: aparecer 0.8s ease 3s backwards;
 }
 

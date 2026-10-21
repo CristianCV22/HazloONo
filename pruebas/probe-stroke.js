@@ -1,9 +1,15 @@
 const http = require('http');
 const { spawn } = require('child_process');
-const EDGE = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe';
-const PUERTO = 9342;
-const URL = 'http://localhost:8472/index.html';
-const PERFIL = 'C:\\Users\\valde\\AppData\\Local\\Temp\\opencode\\edge-stroke-' + Date.now();
+/* Rutas portables: el navegador, el puerto y la carpeta
+   temporal se resuelven aquí (ver pruebas/navegador.js). */
+const {
+    resolverNavegador, puertoServidor, urlPagina, perfilTemporal
+} = require('./navegador');
+const EDGE = resolverNavegador();
+const PUERTO = puertoServidor(9342);
+const URL = urlPagina('http://localhost:8472/index.html');
+const PERFIL = perfilTemporal('edge-stroke');
+
 function getJSON(path) {
   return new Promise((resolve, reject) => {
     const req = http.get({ host: '127.0.0.1', port: PUERTO, path }, (res) => {

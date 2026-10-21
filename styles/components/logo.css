@@ -6,8 +6,11 @@
    atributos): una sola fuente de verdad. Así, los
    degradados y las piezas responden a las variables
    de estado de <body> sin duplicar reglas. */
-.marca-superior { fill: var(--logo-blue-deep); stroke: var(--logo-blue-deep); }
-.marca-inferior { fill: var(--logo-orange-deep); stroke: var(--logo-orange-deep); }
+/* Los marcadores de dirección: su color y el centro de giro
+   (para que el pulso de afirmación gire sobre el propio
+   marcador, no sobre el centro de la rueda). */
+.marca-superior { fill: var(--logo-blue-deep); stroke: var(--logo-blue-deep); transform-origin: 250px 83px; }
+.marca-inferior { fill: var(--logo-orange-deep); stroke: var(--logo-orange-deep); transform-origin: 250px 417px; }
 .eje-izquierdo  { stroke: var(--logo-blue); }
 .eje-derecho    { stroke: var(--logo-orange); }
 
@@ -155,8 +158,12 @@ body:has(#reflexion section.activa:has(> fieldset label:hover:has(> input[value=
    repite cada vez que se vuelve a la
    bienvenida. Comienza y termina donde
    la aguja ya está (paso 0), sin
-   saltos. */
-body:not(.en-flujo) .needle-position {
+   saltos.
+
+   Sin JavaScript la aguja partida se ve
+   tal cual desde el primer pintado
+   (degradación elegante). */
+.js body:not(.en-flujo) .needle-position {
     animation: viajeInicial 2.8s ease-in-out 2.8s 1 backwards;
 }
 
@@ -199,27 +206,24 @@ body:not(.en-flujo) .needle-position {
    La aguja NO entra aquí: su fade
    va dentro del viaje inicial (ver
    viajeInicial), así no vuelve a
-   ejecutarse al avanzar de paso. */
-.markers {
+   ejecutarse al avanzar de paso.
+   Sin JavaScript todas las piezas se
+   ven desde el primer pintado. */
+.js .markers {
     animation: aparecer 0.8s ease 1s backwards;
 }
 
-.marks {
+.js .marks {
     animation: aparecer 0.8s ease 1.3s backwards;
 }
 
-.inner-ring {
+.js .inner-ring {
     animation: aparecerAnillo 0.8s ease 1.9s backwards;
 }
 
-.needle-center {
+.js .needle-center {
     animation: aparecer 0.8s ease 2.2s backwards;
 }
-
-/* Centro de cada marcador (eje de la
-   afirmación de la decisión). */
-.marca-superior { transform-origin: 250px 83px; }
-.marca-inferior { transform-origin: 250px 417px; }
 
 /* AFIRMACIÓN: al decidir, el marcador
    de la dirección elegida da un pulso

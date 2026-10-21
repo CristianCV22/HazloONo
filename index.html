@@ -14,8 +14,24 @@
     <link rel="icon" href="assets/images/favicon.svg" type="image/svg+xml">
     <!-- Marca el documento como "con JavaScript" ANTES de pintar:
          activa el layout de pantalla fija. Sin JS, la página
-         fluye normalmente con scroll (degradado elegante). -->
-    <script>document.documentElement.classList.add('js');</script>
+         fluye normalmente con scroll (degradado elegante).
+         La preferencia de animaciones se aplica aquí también,
+         antes del primer pintado: si el usuario eligió
+         "desactivar", la coreografía no debe empezar (y luego
+         cortarse a mitad). -->
+    <script>
+    document.documentElement.classList.add('js');
+    try {
+        var preferenciaAnimacion = localStorage.getItem('hazlono-animacion');
+        if (preferenciaAnimacion === 'activar') {
+            document.documentElement.classList.add('fuerza-animacion');
+        } else if (preferenciaAnimacion === 'desactivar') {
+            document.documentElement.classList.add('fuerza-reduccion');
+        }
+    } catch (e) {
+        /* sin almacenamiento: la preferencia no persiste */
+    }
+    </script>
     <link rel="stylesheet" href="styles/variables.css">
     <link rel="stylesheet" href="styles/base.css">
     <link rel="stylesheet" href="styles/components/header.css">
@@ -207,7 +223,8 @@
     <main>
         <!-- ============================================================
              INDICADOR DE PROGRESO
-             5 pasos; el activo lleva aria-current="step".
+             Los 5 pasos del flujo (el cierre es un resumen, no un
+             paso más). El activo lleva aria-current="step".
              Oculto en la bienvenida (JS lo maneja con `hidden`).
              ============================================================ -->
         <nav aria-label="Progreso de la reflexión" hidden>
@@ -217,9 +234,22 @@
                 <li>Consecuencias</li>
                 <li>Reflexión</li>
                 <li>Elección</li>
-                <li>Cierre</li>
             </ol>
         </nav>
+
+        <!-- ============================================================
+             AVISO SIN JAVASCRIPT
+             El contenido se lee y se puede escribir, pero sin JS no
+             se puede avanzar de paso ni guardar la reflexión.
+             ============================================================ -->
+        <noscript>
+            <p class="aviso-noscript">
+                <strong>Hazlo o No funciona mejor con JavaScript.</strong>
+                Sin él, puedes leer la reflexión y escribir en los
+                campos, pero no se puede avanzar de paso ni guardar
+                tu reflexión.
+            </p>
+        </noscript>
 
         <!-- ============================================================
              FORMULARIO DE REFLEXIÓN
@@ -291,7 +321,7 @@
                     placeholder="Ej.: estudiar para el examen de mañana"
                 ></textarea>
                 <p class="texto-apoyo">Reflexiona sobre lo que quieres hacer en esta situación.</p>
-                <p role="alert"></p>
+                <p role="alert" id="alerta-decision"></p>
                 <button type="button" data-retroceder data-secundario>← Anterior</button>
                 <button type="button" data-avanzar>Continuar <span aria-hidden="true">→</span></button>
             </section>
@@ -326,7 +356,7 @@
                     <p class="texto-apoyo">Piensa en lo que podrías ganar, perder, evitar o descubrir si decides no hacerlo.</p>
                 </fieldset>
 
-                <p role="alert"></p>
+                <p role="alert" id="alerta-consecuencias"></p>
                 <button type="button" data-retroceder data-secundario>← Anterior</button>
                 <button type="button" data-avanzar>Continuar <span aria-hidden="true">→</span></button>
             </section>
@@ -363,7 +393,7 @@
                     <p class="texto-apoyo">Piensa en lo que podrías obtener y lo que tendrías que dejar de lado.</p>
                 </fieldset>
 
-                <p role="alert"></p>
+                <p role="alert" id="alerta-reflexion"></p>
                 <button type="button" data-retroceder data-secundario>← Anterior</button>
                 <button type="button" data-avanzar>Continuar <span aria-hidden="true">→</span></button>
             </section>
@@ -397,7 +427,7 @@
                 ></textarea>
                 <p class="texto-apoyo">Reflexiona sobre por qué tomaste esa decisión y qué te llevó a ella.</p>
 
-                <p role="alert"></p>
+                <p role="alert" id="alerta-eleccion"></p>
                 <button type="button" data-retroceder data-secundario>← Anterior</button>
                 <button type="button" data-terminar>Terminar reflexión</button>
             </section>

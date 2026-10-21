@@ -1,14 +1,17 @@
 /* ==========================================================================
    Hazlo o No - Componente: formulario (flujo de reflexión)
    ==========================================================================
-   Componente del flujo: umbral de la
-   bienvenida, respiración guiada,
-   validación por paso, cierre,
-   etiquetado emocional y eventos.
+   Componente del flujo: validación por
+   paso, cierre, etiquetado emocional y
+   eventos del formulario.
+
+   El umbral de la bienvenida y la respiración
+   guiada viven en su propio componente
+   (components/umbral.js).
 
    Recibe su ámbito del DOM global (el
    <form id="reflexion"> y sus secciones,
-   desde state.js) y registra sus eventos
+   desde datos.js) y registra sus eventos
    en initForm(): ningún listener queda
    activo hasta que la aplicación lo
    inicializa (main.js).
@@ -16,237 +19,71 @@
 
 import {
     secciones, pasoActual, transicionando, respuestas,
-    pieConsejo, formulario, mostrarError, enfocarTitulo,
-    mostrarPaso, transicionarA, archivarReflexion
-} from '../state.js';
+    pieConsejo, formulario, reiniciarIdReflexion
+} from '../datos.js';
 import {
-    guardarPronto, borrarBorrador, cancelarGuardado,
-    movimientoReducido
-} from '../utils.js';
+    mostrarError, enfocarTitulo, mostrarPaso, transicionarA,
+    archivarReflexion, guardarPronto, borrarBorrador, cancelarGuardado
+} from '../state.js';
+import { movimientoReducido } from '../almacen.js';
 import { actualizarLogo, actualizarAmbiente } from './logo.js';
-
-/* --------------------------------------------------------------------------
-   UMBRAL DE LA BIENVENIDA (1.1.1)
-   Un segundo tiempo que convierte el
-   clic en pausa consciente: el usuario
-   no entra de golpe a la reflexión,
-   primero lee que no hay prisa.
-   -------------------------------------------------------------------------- */
-
-// El umbral de la bienvenida (1.1.1):
-// la pausa consciente entre el clic y
-// el primer paso. Vive solo en el paso 0.
-let umbralVisible = false;
-
-/**
- * Muestra el umbral: la bienvenida
- * cruza de la invitación a la pausa.
- * Solo vive en el paso 0 y sin
- * transición en curso.
- */
-export function mostrarUmbral() {
-    if (umbralVisible || pasoActual !== 0 || transicionando) {
-        return;
-    }
-    const seccion = secciones[0];
-    const umbral = seccion.querySelector('.bienvenida-umbral');
-    const inicial = seccion.querySelector('.bienvenida-inicial');
-    if (!umbral || !inicial) {
-        return;
-    }
-    umbralVisible = true;
-    seccion.classList.add('en-umbral');
-    inicial.hidden = true;
-    umbral.hidden = false;
-    // La sección anuncia ahora el título
-    // del umbral (el inicial queda oculto).
-    seccion.setAttribute('aria-labelledby', 'titulo-umbral');
-    const titulo = umbral.querySelector('h3');
-    if (titulo) {
-        titulo.setAttribute('tabindex', '-1');
-        titulo.focus({ preventScroll: true });
-    }
-}
-
-/**
- * Retira el umbral y devuelve la
- * bienvenida a su primer tiempo.
- */
-export function ocultarUmbral() {
-    if (!umbralVisible) {
-        return;
-    }
-    // Si se estaba respirando, detener
-    // la guía (sin mover el foco: la
-    // transición ya gestiona el foco).
-    terminarRespiracion(false);
-    const seccion = secciones[0];
-    umbralVisible = false;
-    seccion.classList.remove('en-umbral');
-    const umbral = seccion.querySelector('.bienvenida-umbral');
-    const inicial = seccion.querySelector('.bienvenida-inicial');
-    if (umbral) {
-        umbral.hidden = true;
-    }
-    if (inicial) {
-        inicial.hidden = false;
-    }
-    seccion.setAttribute('aria-labelledby', 'titulo-bienvenida');
-}
-
-/* --------------------------------------------------------------------------
-   RESPIRACIÓN GUIADA (1.1.2)
-   3 ciclos 4-4-4 (inhala, sostén,
-   exhala) con descanso breve entre
-   ciclos. El anillo pasa de decorativo
-   a guía; la fase se anuncia por
-   role="status" y la cuenta atrás es
-   visual.
-   -------------------------------------------------------------------------- */
-
-// Configuración de la técnica 4-4-4.
-const RESPIRACION = {
-    fases: [
-        { nombre: 'Inhala', duracion: 4 },
-        { nombre: 'Sostén', duracion: 4 },
-        { nombre: 'Exhala', duracion: 4 }
-    ],
-    ciclos: 3,
-    descanso: 1 // s entre ciclos
-};
-let respirando = false;
-let temporizadorRespiracion = null;
-
-/**
- * Entra en el modo respiración:
- * el umbral swapa a la guía 4-4-4.
- * @returns {void}
- */
-function iniciarRespiracion() {
-    if (respirando || !umbralVisible) {
-        return;
-    }
-    const seccion = secciones[0];
-    const normal = seccion.querySelector('.umbral-normal');
-    const guia = seccion.querySelector('.umbral-respiracion');
-    const anillo = seccion.querySelector('.anillo-respiracion');
-    if (!normal || !guia || !anillo) {
-        return;
-    }
-    respirando = true;
-    anillo.classList.add('guiado');
-    normal.hidden = true;
-    guia.hidden = false;
-    // Foco al botón «Saltar» (la fase se
-    // anuncia sola por role="status").
-    const saltar = guia.querySelector('[data-saltar]');
-    if (saltar) {
-        saltar.focus({ preventScroll: true });
-    }
-    ejecutarFase(0, 0);
-}
-
-/**
- * Ejecuta una fase con su cuenta atrás.
- * @param {number} indiceFase - Índice en RESPIRACION.fases.
- * @param {number} ciclo      - Ciclo actual (0..RESPIRACION.ciclos-1).
- * @returns {void}
- */
-function ejecutarFase(indiceFase, ciclo) {
-    if (!respirando) {
-        return;
-    }
-    const fase = RESPIRACION.fases[indiceFase];
-    const faseEl = document.querySelector('#fase-respiracion');
-    const cuentaEl = document.querySelector('.cuenta-respiracion');
-    const cicloEl = document.querySelector('.ciclo-respiracion');
-    const anillo = secciones[0].querySelector('.anillo-respiracion');
-    faseEl.textContent = fase.nombre;
-    if (cicloEl) {
-        cicloEl.textContent = `Ciclo ${ciclo + 1} de ${RESPIRACION.ciclos}`;
-    }
-    anillo.classList.remove('inhala', 'exhala');
-    if (indiceFase === 0) {
-        anillo.classList.add('inhala');
-    } else if (indiceFase === 2) {
-        anillo.classList.add('exhala');
-    }
-    cuentaAtras(fase.duracion, () => {
-        if (!respirando) {
-            return;
-        }
-        if (indiceFase < RESPIRACION.fases.length - 1) {
-            ejecutarFase(indiceFase + 1, ciclo);
-        } else if (ciclo < RESPIRACION.ciclos - 1) {
-            // Descanso breve entre ciclos.
-            faseEl.textContent = 'Descansa';
-            anillo.classList.remove('inhala', 'exhala');
-            cuentaAtras(RESPIRACION.descanso, () => ejecutarFase(0, ciclo + 1));
-        } else {
-            terminarRespiracion();
-        }
-    });
-}
-
-/**
- * Cuenta atrás recursiva: encadena
- * temporizadores en vez de setInterval
- * (fácil de probar y de cancelar).
- * @param {number} segundos   - Segundos que quedan.
- * @param {Function} alTerminar - Al llegar a cero.
- * @returns {void}
- */
-function cuentaAtras(segundos, alTerminar) {
-    const cuentaEl = document.querySelector('.cuenta-respiracion');
-    if (cuentaEl) {
-        cuentaEl.textContent = String(segundos);
-    }
-    if (segundos > 1) {
-        temporizadorRespiracion = setTimeout(() => {
-            cuentaAtras(segundos - 1, alTerminar);
-        }, 1000);
-    } else {
-        temporizadorRespiracion = setTimeout(alTerminar, 1000);
-    }
-}
-
-/**
- * Sale del modo respiración: el umbral
- * vuelve a su tiempo normal.
- * @param {boolean} [moverFoco=true] - Devolver el foco al título del umbral.
- * @returns {void}
- */
-export function terminarRespiracion(moverFoco = true) {
-    respirando = false;
-    if (temporizadorRespiracion) {
-        clearTimeout(temporizadorRespiracion);
-        temporizadorRespiracion = null;
-    }
-    const seccion = secciones[0];
-    const normal = seccion.querySelector('.umbral-normal');
-    const guia = seccion.querySelector('.umbral-respiracion');
-    const anillo = seccion.querySelector('.anillo-respiracion');
-    if (anillo) {
-        anillo.classList.remove('guiado', 'inhala', 'exhala');
-    }
-    if (guia) {
-        guia.hidden = true;
-    }
-    if (normal) {
-        normal.hidden = false;
-    }
-    if (moverFoco) {
-        // Foco de vuelta al título del umbral.
-        const titulo = seccion.querySelector('#titulo-umbral');
-        if (titulo) {
-            titulo.focus({ preventScroll: true });
-        }
-    }
-}
+import {
+    mostrarUmbral, ocultarUmbral, iniciarRespiracion, terminarRespiracion
+} from './umbral.js';
 
 /* --------------------------------------------------------------------------
    VALIDACIÓN
    -------------------------------------------------------------------------- */
+
+/**
+ * Nombre legible de un campo: su etiqueta visible
+ * («Consecuencias de hacerlo»). Sirve para nombrar
+ * el campo en el mensaje de error: sin saber QUÉ
+ * falta, el aviso es inútil.
+ * @param {HTMLElement} campo - Campo a describir.
+ * @returns {string} el nombre, o '' si no se puede averiguar.
+ */
+function nombreDelCampo(campo) {
+    if (!campo || !campo.id) {
+        return '';
+    }
+    const etiqueta = document.querySelector('label[for="' + campo.id + '"]');
+    return (etiqueta && etiqueta.textContent) ? etiqueta.textContent.trim() : '';
+}
+
+/**
+ * Marca un campo como inválido y lo asocia con su
+ * mensaje de error: el lector de pantalla anuncia el
+ * aviso (role="alert") y, al llegar al campo con el
+ * teclado, lo vuelve a leer (aria-describedby).
+ * @param {HTMLElement} campo   - Campo con el error.
+ * @param {HTMLElement} seccion - Sección que contiene el aviso.
+ * @param {string} mensaje      - Texto del aviso.
+ */
+function marcarInvalido(campo, seccion, mensaje) {
+    const aviso = seccion.querySelector('p[role="alert"]');
+    mostrarError(seccion, mensaje);
+    if (!campo) {
+        return;
+    }
+    campo.setAttribute('aria-invalid', 'true');
+    if (aviso && aviso.id) {
+        campo.setAttribute('aria-describedby', aviso.id);
+    }
+}
+
+/**
+ * Quita las marcas de error de un campo (al validarlo
+ * con éxito, o al corregirlo).
+ * @param {HTMLElement} campo - Campo a limpiar.
+ */
+function limpiarInvalido(campo) {
+    if (!campo) {
+        return;
+    }
+    campo.removeAttribute('aria-invalid');
+    campo.removeAttribute('aria-describedby');
+}
 
 /**
  * Valida los campos obligatorios del paso actual.
@@ -264,20 +101,25 @@ export function validarPasoActual() {
     const areas = seccion.querySelectorAll('textarea[required]');
     for (const area of areas) {
         if (area.value.trim() === '') {
-            mostrarError(seccion, 'Por favor, completa este campo para continuar.');
+            const nombre = nombreDelCampo(area);
+            marcarInvalido(area, seccion, nombre
+                ? 'Falta completar «' + nombre + '».'
+                : 'Por favor, completa este campo para continuar.');
             area.focus();
             return false;
         }
+        limpiarInvalido(area);
     }
 
     // 2) Grupo de radios (elección final): al menos uno
     //    debe estar marcado.
     const radios = seccion.querySelectorAll('input[type="radio"][required]');
     if (radios.length > 0 && !seccion.querySelector('input[type="radio"]:checked')) {
-        mostrarError(seccion, 'Selecciona una de las dos opciones para continuar.');
+        marcarInvalido(radios[0], seccion, 'Selecciona una de las dos opciones para continuar.');
         radios[0].focus();
         return false;
     }
+    radios.forEach(limpiarInvalido);
 
     return true;
 }
@@ -322,6 +164,15 @@ export function reiniciar() {
     Object.keys(respuestas).forEach((clave) => {
         respuestas[clave] = '';
     });
+
+    // El estado emocional también se limpia: los botones
+    // vuelve a estar sin marcar (aria-pressed="false") y
+    // el tinte de la pantalla desaparece.
+    actualizarEmocionUI();
+
+    // Reflexión nueva: la siguiente entrada del historial
+    // será distinta (no actualizará la anterior).
+    reiniciarIdReflexion();
 
     if (transicionando) {
         mostrarPaso(0); // Transición en curso: ir de inmediato.

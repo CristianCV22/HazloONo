@@ -8,10 +8,7 @@
    y el formulario).
    ========================================================================== */
 
-import { logo, clasesPaso, respuestas, pasoActual } from '../state.js';
-
-
-
+import { logo, clasesPaso, respuestas, pasoActual } from '../datos.js';
 
 /**
  * Coloca la aguja del logotipo según el estado:

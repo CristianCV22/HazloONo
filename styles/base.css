@@ -13,7 +13,6 @@
 
 
 /* --------------------------------------------------------------------------
-   PROPIEDADES REGISTRADAS (/* --------------------------------------------------------------------------
    1. RESET BÁSICO (normalización ligera entre navegadores)
    -------------------------------------------------------------------------- */
 *,
@@ -85,6 +84,9 @@ select {
 /* --------------------------------------------------------------------------
    3. LAYOUT GENERAL
    -------------------------------------------------------------------------- */
+/* stylelint-disable no-duplicate-selectors --
+   El <body> se declara en dos secciones (reset y layout):
+   es intencionado, no un descuido. */
 body {
     min-height: 100vh;
     min-height: 100dvh;
@@ -107,6 +109,7 @@ body {
         --aguja-acento 0.9s ease,
         --aguja-centro 0.9s ease;
 }
+/* stylelint-enable no-duplicate-selectors */
 
 /* Con JavaScript: PANTALLA FIJA, sin scroll.
    Sin JS: la página crece y fluye con scroll normal. */
@@ -215,6 +218,22 @@ p[role="alert"] {
 
 p[role="alert"].entrando {
     animation: aparecer 0.3s ease;
+}
+
+/* Aviso para quien llega sin JavaScript: el contenido se
+   lee igual, pero la interacción (avanzar de paso, guardar)
+   no está disponible. */
+.aviso-noscript {
+    max-width: 560px;
+    padding: 0.75rem 1.25rem;
+    border-radius: 0.5rem;
+    border-left: 4px solid var(--logo-blue);
+    background: rgba(255, 255, 255, 0.7);
+    text-align: left;
+}
+
+.aviso-noscript strong {
+    display: block;
 }
 
 /* Resumen de la decisión (pantalla de reflexión) y mensaje de cierre */

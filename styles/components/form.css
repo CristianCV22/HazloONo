@@ -43,6 +43,23 @@ section {
     margin: auto 0;
 }
 
+/* El contenido NUNCA se encoge por debajo de su tamaño: si
+   el paso no cabe (pantalla muy corta, texto de apoyo,
+   mensaje de error…), el contenido desborda y la sección
+   hace scroll interno (overflow-y: auto) en lugar de
+   solaparse con sus hermanos. Sin esto, los campos (que
+   tienen un alto mínimo) se comprimen y sus textos se
+   montan unos sobre otros. */
+.js #reflexion section > * {
+    flex-shrink: 0;
+}
+
+/* Los campos, en cambio, sí crecen para llenar el espacio
+   libre de la pantalla fija (pero nunca se encogen). */
+.js #reflexion section > fieldset {
+    flex: 1 0 auto;
+}
+
 /* Sección visible */
 .js #reflexion section.activa {
     opacity: 1;
@@ -432,15 +449,20 @@ header .logo {
    azul, luego el naranja). Son
    semicírculos de radio 150 → longitud
    ≈ 471.24 px. El glow de la decisión
-   entra con transición. */
-.ring-blue {
+   entra con transición.
+
+   El trazo "sin dibujar" (stroke-dashoffset) sólo
+   se aplica con JavaScript: sin él, los arcos se
+   ven completos desde el primer pintado
+   (degradación elegante). */
+.js .ring-blue {
     stroke-dasharray: 471.24;
     stroke-dashoffset: 471.24;
     animation: trazar 1.8s ease-out 0.3s forwards;
     transition: filter 0.6s ease;
 }
 
-.ring-orange {
+.js .ring-orange {
     stroke-dasharray: 471.24;
     stroke-dashoffset: 471.24;
     animation: trazar 1.8s ease-out 0.6s forwards;
@@ -449,8 +471,9 @@ header .logo {
 
 /* Nombre del producto: entra en fade
    tras el logotipo — la marca completa
-   la escena. */
-header h1 {
+   la escena. Sin JavaScript el nombre
+   aparece de inmediato. */
+.js header h1 {
     animation: aparecer 0.8s ease 2.5s backwards;
 }
 

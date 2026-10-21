@@ -5,6 +5,9 @@
   "private": true,
   "scripts": {
     "test": "node tests/flujo.test.js",
+    "test:grafo": "node pruebas/verificar-grafica.js",
+    "lint": "npx --yes eslint@9 .",
+    "lint:css": "npx --yes stylelint@16 \"styles/**/*.css\"",
     "serve": "python -m http.server 8000"
   },
   "license": "MIT"

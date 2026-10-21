@@ -14,12 +14,18 @@
    excepciones de la consola: son las que vigilan las importaciones. */
 
 const fs = require('fs');
-const BASE = 'C:/Users/valde/OneDrive/Documentos/Proyectos/HazloONo/';
+const path = require('path');
+// Raíz del proyecto, calculada desde la ubicación de este
+// archivo: la prueba funciona en cualquier sistema y en
+// cualquier carpeta (sin rutas absolutas).
+const BASE = path.join(__dirname, '..') + path.sep;
 const html = fs.readFileSync(BASE + 'index.html', 'utf-8');
 const MODULOS_JS = [
-    'scripts/utils.js',
-    'scripts/state.js',
+    'scripts/datos.js',
+    'scripts/almacen.js',
     'scripts/components/logo.js',
+    'scripts/components/umbral.js',
+    'scripts/state.js',
     'scripts/components/form.js',
     'scripts/components/modal.js',
     'scripts/main.js'
@@ -178,15 +184,26 @@ function simpleMatch(el, p) {
 }
 
 /* Construir el árbol desde el HTML (se eliminan comentarios:
-   pueden contener literales como "<section>" que confunden al parser) */
+   pueden contener literales como "<section>" que confunden al parser).
+   El texto entre etiquetas también se captura: permite comprobar
+   los mensajes que nombran el campo ("Falta completar «…»"). */
 const htmlLimpio = html.replace(/<!--[\s\S]*?-->/g, '');
 const raiz = new El('body');
 const pila = [raiz];
 const VACIOS = ['meta', 'link', 'br', 'hr', 'input', 'img', 'source', 'path', 'polygon', 'circle', 'line', 'use', 'stop'];
-const tagRe = /<(\/?)([a-zA-Z][a-zA-Z0-9]*)((?:\s+[a-zA-Z0-9-]+(?:="[^"]*")?)*)\s*(\/?)>/g;
+const tagRe = /([^<]+)|<(\/?)([a-zA-Z][a-zA-Z0-9]*)((?:\s+[a-zA-Z0-9-]+(?:="[^"]*")?)*)\s*(\/?)>/g;
 let tok;
 while ((tok = tagRe.exec(htmlLimpio))) {
-    const [, cierre, tag, attrsStr] = tok;
+    if (tok[1] !== undefined) {
+        // Texto: pertenece al elemento abierto.
+        const abierto = pila[pila.length - 1];
+        if (abierto) {
+            abierto._texto = (abierto._texto || '') + tok[1];
+        }
+        continue;
+    }
+    // Grupos de la regex: 1=texto, 2=cierre, 3=tag, 4=atributos.
+    const [, , cierre, tag, attrsStr] = tok;
     if (cierre) { pila.pop(); continue; }
     const attrs = {};
     const aRe = /([a-zA-Z0-9-]+)(?:="([^"]*)")?/g;
@@ -209,7 +226,37 @@ const documento = {
 // El script usa window.matchMedia (prefers-reduced-motion) y
 // setTimeout (transiciones). En la prueba: movimiento NO reducido
 // y transiciones síncronas (setTimeout ejecuta al instante).
-const ventana = { matchMedia: () => ({ matches: false }) };
+// La preferencia de movimiento se puede cambiar durante la
+// prueba (api.setMovimientoReducido) para cubrir la ruta
+// "movimiento reducido", donde el cambio de paso es inmediato.
+let movimientoReducido = false;
+const ventana = {
+    matchMedia: (consulta) => ({
+        matches: movimientoReducido && String(consulta).includes('prefers-reduced-motion')
+    })
+};
+
+// Oyentes de window (el script guarda el borrador al cerrar
+// la pestaña: beforeunload / pagehide).
+const oyentesVentana = {};
+ventana.addEventListener = (tipo, fn) => {
+    (oyentesVentana[tipo] = oyentesVentana[tipo] || []).push(fn);
+};
+
+/* Fotogramas simulados: el foco se aplaza al fotograma
+   siguiente (para que la sección sea visible cuando se
+   enfoca). flushFrames() ejecuta los fotogramas pendientes. */
+let fotogramas = [];
+const requestAnimationFrame = (fn) => { fotogramas.push(fn); return fotogramas.length; };
+function flushFrames() {
+    let vueltas = 0;
+    while (fotogramas.length > 0 && vueltas < 10) {
+        const lote = fotogramas;
+        fotogramas = [];
+        lote.forEach((fn) => fn());
+        vueltas++;
+    }
+}
 
 // Almacenamiento local simulado: la preferencia
 // de animaciones lo usa (localStorage no existe
@@ -222,12 +269,16 @@ global.localStorage = {
     removeItem: (k) => { almacenSimulado.delete(k); }
 };
 
-const entorno = { document: documento, window: ventana, console, Object, String, Number, Array };
-const setTimeoutReal = setTimeout;
+const entorno = { document: documento, window: ventana, console, Object, String, Number, Array, requestAnimationFrame };
 global.setTimeout = (fn) => { fn(); return 0; };
 const fn = new Function(...Object.keys(entorno),
-    js + '\nreturn {secciones, pasosIndicador, respuestas, navIndicador, piePaso, logo: document.querySelector(".logo"), mostrarPaso, borrador: { guardar: guardarBorrador, leer: leerBorrador, borrar: borrarBorrador, clave: CLAVE_BORRADOR, restaurar: restaurarBorrador }, historial: { archivar: archivarReflexion, leer: leerHistorial, clave: CLAVE_HISTORIAL }};');
+    js + '\nreturn {secciones, pasosIndicador, respuestas, navIndicador, piePaso, logo: document.querySelector(".logo"), mostrarPaso, borrador: { guardar: guardarBorrador, leer: leerBorrador, borrar: borrarBorrador, clave: CLAVE_BORRADOR, restaurar: restaurarBorrador }, historial: { archivar: archivarReflexion, leer: leerHistorial, clave: CLAVE_HISTORIAL }, reiniciarIdReflexion };');
 const api = fn(...Object.values(entorno));
+// Utilidades de la prueba que el código de los módulos no
+// puede usar (son parte del entorno, no de la aplicación).
+api.flushFrames = flushFrames;
+api.setMovimientoReducido = (valor) => { movimientoReducido = valor; };
+api.dispararVentana = (tipo) => (oyentesVentana[tipo] || []).forEach((f) => f());
 // Nota: el stub de setTimeout permanece activo durante toda la
 // prueba para que las transiciones sean síncronas (el proceso
 // de prueba termina al finalizar, no hace falta restaurarlo).
@@ -270,23 +321,29 @@ comprobar('En los pasos, la marca pasa a segundo plano (.en-flujo)', documento.b
 comprobar('Indicador de progreso APARECE desde el paso 2', api.navIndicador.hidden === false);
 comprobar('Indicador: "Decisión" es aria-current', api.pasosIndicador[1].hasAttribute('aria-current'));
 comprobar('Aguja barre al paso 1 (.paso-1)', claseLogo().includes('paso-1'));
+api.flushFrames();
 comprobar('Foco movido al título del paso (accesibilidad)', api.secciones[1].querySelector('h2')._foco === true);
 
 console.log('3. Validación: decisión vacía');
 clic(botonDe(1, 'data-avanzar'));
 comprobar('No avanza con la decisión vacía', visible(1));
 comprobar('Muestra mensaje de error accesible', alertaDe(1) !== '');
-comprobar('El error dice "completa este campo"', alertaDe(1).includes('completa este campo'));
+comprobar('El error nombra el campo que falta', alertaDe(1).includes('Escribe la decisión que estás considerando'));
+comprobar('El campo inválido se marca (aria-invalid)', documento.querySelector('#decision').getAttribute('aria-invalid') === 'true');
+comprobar('El campo se asocia con su aviso (aria-describedby)', documento.querySelector('#decision').getAttribute('aria-describedby') === 'alerta-decision');
 
 console.log('4. Paso 3 · consecuencias');
 escribir(documento.querySelector('#decision'), 'Estudiar para el examen');
 clic(botonDe(1, 'data-avanzar'));
 comprobar('Avanza al paso de consecuencias', visible(2));
+comprobar('Al corregir, el campo deja de estar marcado', !documento.querySelector('#decision').hasAttribute('aria-invalid'));
+comprobar('Al corregir, se quita la asociación con el aviso', !documento.querySelector('#decision').hasAttribute('aria-describedby'));
 comprobar('Respuesta guardada en memoria', api.respuestas.decision === 'Estudiar para el examen');
 comprobar('Pie: "Paso 2 de 5 · Consecuencias"', (api.piePaso.textContent || '') === 'Paso 2 de 5 · Consecuencias');
 clic(botonDe(2, 'data-avanzar'));
 comprobar('No avanza con consecuencias vacías', visible(2));
 comprobar('Error visible en consecuencias', alertaDe(2) !== '');
+comprobar('El error nombra el campo que falta', alertaDe(2).includes('Consecuencias de hacerlo'));
 escribir(documento.querySelector('#consecuencias-hacer'), 'Aprobaré y me sentiré tranquilo');
 escribir(documento.querySelector('#consecuencias-no-hacer'), 'Evito el esfuerzo pero arriesgo el resultado');
 clic(botonDe(2, 'data-avanzar'));
@@ -599,13 +656,16 @@ comprobar('La entrada guarda el motivo', historial.entradas[0].motivo === 'Mi tr
 comprobar('La entrada tiene fecha', Boolean(historial.entradas[0].fecha));
 comprobar('El borrador se borra al archivar', almacenSimulado.get('hazlono-borrador') === undefined);
 comprobar('El cierre queda visible', visible(5));
-// Volver y re-terminar agrega otra entrada
+// Volver y re-terminar ACTUALIZA la entrada (no la duplica):
+// es la misma reflexión, con la elección modificada.
 clic(botonDe(5, 'data-retroceder'));
 escribir(documento.querySelector('#motivo'), 'Otro motivo');
 clic(botonDe(4, 'data-terminar'));
 const entradas2 = JSON.parse(almacenSimulado.get('hazlono-historial')).entradas;
-comprobar('Re-terminar agrega otra entrada', entradas2.length === 2);
-comprobar('La segunda entrada tiene el nuevo motivo', entradas2[1].motivo === 'Otro motivo');
+comprobar('Re-terminar NO duplica la entrada', entradas2.length === 1);
+comprobar('La entrada se actualiza con el nuevo motivo', entradas2[0].motivo === 'Otro motivo');
+comprobar('La entrada conserva la decisión', entradas2[0].decision === 'Aprender a nadar');
+comprobar('La entrada conserva la elección modificada', entradas2[0].eleccion === 'hacerlo');
 comprobar('El borrador sigue ausente', almacenSimulado.get('hazlono-borrador') === undefined);
 // Sin almacenamiento: archivar falla en silencio
 const almacenT5 = global.localStorage;
@@ -624,12 +684,12 @@ const vacioHistorial = documento.querySelector('#historial-vacio');
 // Simular showModal (el shim no tiene <dialog> nativo)
 let abiertoT6 = false;
 dialogoHistorial.showModal = () => { abiertoT6 = true; };
-// Abrir con el historial de las pruebas T5 (2 entradas)
+// Abrir con el historial de las pruebas T5 (1 reflexión:
+// la entrada se actualizó al cambiar la elección)
 clic(botonHistorial);
 comprobar('Abrir historial abre el diálogo', abiertoT6);
-comprobar('Se renderizan las entradas', listaHistorial.children.length === 2);
-comprobar('La primera es la más reciente', (listaHistorial.children[0].textContent || '').includes('Otro motivo'));
-comprobar('La segunda es la anterior', (listaHistorial.children[1].textContent || '').includes('Mi tranquilidad'));
+comprobar('Se renderiza la entrada (sin duplicados)', listaHistorial.children.length === 1);
+comprobar('La entrada refleja el motivo actualizado', (listaHistorial.children[0].textContent || '').includes('Otro motivo'));
 comprobar('La elección aparece en el texto', (listaHistorial.children[0].textContent || '').includes('HACERLO'));
 comprobar('La lista es visible (sin hidden)', !listaHistorial.hidden);
 comprobar('El estado vacío está oculto', vacioHistorial.hidden);
@@ -736,7 +796,11 @@ comprobar('E3. Borrador borrado al archivar', almacenSimulado.get('hazlono-borra
 
 // --- E4: recarga (lo que hace el INICIO):
 // sin borrador → bienvenida; el historial
-// pervive
+// pervive. Una recarga real empieza con el
+// estado del módulo limpio: la reflexión pierde
+// su identidad (la siguiente será una entrada
+// nueva del historial, no una actualización).
+api.reiniciarIdReflexion();
 api.mostrarPaso(0, false);
 api.borrador.restaurar();
 comprobar('E4. Recarga: vuelve a la bienvenida', visible(0));
@@ -816,6 +880,7 @@ clic(botonDe(0, 'data-empezar'));
 const botonVolver = raiz.querySelector('button[data-volver]');
 clic(botonVolver);
 comprobar('«Volver» oculta el umbral', umbral.hidden && !inicial.hidden);
+api.flushFrames();
 comprobar('«Volver» devuelve el foco al título inicial', documento.querySelector('#titulo-bienvenida')._foco === true);
 // Reiniciar deja la bienvenida limpia
 clic(botonDe(0, 'data-empezar'));
@@ -892,6 +957,95 @@ const botonesNavegacion = raiz.querySelectorAll('#reflexion button[data-avanzar]
 const todosTypeButton = Array.from(botonesNavegacion).every(b => b.attrs.type === 'button');
 comprobar('Los botones de navegación son type="button"', todosTypeButton);
 
+console.log('26. Foco accesible al cambiar de paso (regresión: foco con movimiento reducido)');
+// El foco NO puede aplicarse en el mismo instante en que la
+// sección recibe la clase .activa: todavía no es visible y el
+// navegador lo rechaza (el foco se quedaría en <body> y el
+// lector de pantalla no anunciaría el paso). Por eso se aplaza
+// al fotograma siguiente.
+// El shim marca el foco con una bandera pegajosa: se limpia
+// antes de cada comprobación.
+function limpiarFocos() {
+    api.secciones.forEach((s) => s._todos().forEach((n) => { n._foco = false; }));
+}
+clic(botonReiniciarMenu);
+api.flushFrames();
+comprobar('Estado limpio: bienvenida', visible(0));
+limpiarFocos();
+clic(botonDe(0, 'data-empezar'));
+clic(botonDe(0, 'data-avanzar')); // umbral -> decisión
+comprobar('El paso cambia de inmediato', visible(1));
+comprobar('El foco NO se aplica en el mismo instante', api.secciones[1].querySelector('h2')._foco === false);
+api.flushFrames();
+comprobar('El foco se aplica en el fotograma siguiente', api.secciones[1].querySelector('h2')._foco === true);
+comprobar('El título recibe tabindex="-1" (no altera el tabulado)', api.secciones[1].querySelector('h2').getAttribute('tabindex') === '-1');
+
+// Con movimiento reducido el cambio de paso es instantáneo:
+// el foco debe seguir llegando al título (es la ruta que usan
+// las personas que piden menos movimiento).
+api.setMovimientoReducido(true);
+clic(botonReiniciarMenu);
+api.flushFrames();
+limpiarFocos();
+clic(botonDe(0, 'data-empezar'));
+clic(botonDe(0, 'data-avanzar')); // umbral -> decisión
+comprobar('Con movimiento reducido, el paso cambia', visible(1));
+comprobar('Con movimiento reducido, el foco se aplaza también', api.secciones[1].querySelector('h2')._foco === false);
+api.flushFrames();
+comprobar('Con movimiento reducido, el foco llega al título', api.secciones[1].querySelector('h2')._foco === true);
+api.setMovimientoReducido(false);
+
+console.log('27. Contrato CSS del layout (regresión: solapamiento en pantallas bajas)');
+// El shim no tiene motor de layout: el solapamiento se
+// comprueba en el navegador real (pruebas/). Aquí se fija el
+// CONTRATO CSS que lo evita: el contenido de una sección
+// nunca se encoge por debajo de su tamaño (si no cabe, la
+// sección hace scroll interno en lugar de solaparse).
+const cssFormulario = fs.readFileSync(BASE + 'styles/components/form.css', 'utf-8');
+comprobar('Los hijos de la sección no se encogen (flex-shrink: 0)', /#reflexion section\s*>\s*\*\s*\{[^}]*flex-shrink:\s*0/.test(cssFormulario));
+comprobar('Los campos crecen pero no se encogen (flex: 1 0 auto)', /flex:\s*1\s+0\s+auto/.test(cssFormulario));
+
+console.log('28. Estado y datos: reinicio, fecha y cierre de pestaña');
+// El estado emocional se limpia al reiniciar: los botones
+// vuelven a estar sin marcar y el tinte desaparece.
+const botonMiedo = raiz.querySelector('button[data-emocion="miedo"]');
+clic(botonMiedo);
+comprobar('La emoción elegida queda marcada', botonMiedo.getAttribute('aria-pressed') === 'true');
+comprobar('El tinte emocional se aplica', documento.body.classList.contains('emocion-miedo'));
+clic(botonReiniciarMenu);
+comprobar('Tras reiniciar, la emoción ya NO está marcada', botonMiedo.getAttribute('aria-pressed') === 'false');
+comprobar('Tras reiniciar, desaparece el tinte emocional', !documento.body.classList.contains('emocion-miedo'));
+
+// Una fecha corrupta no debe mostrarse como "Invalid Date".
+almacenSimulado.set('hazlono-historial', JSON.stringify({
+    version: 1,
+    entradas: [{ decision: 'X', eleccion: 'hacerlo', motivo: 'Y', fecha: 'no-es-fecha' }]
+}));
+comprobar('Una fecha corrupta se descarta', api.historial.leer()[0].fecha === '');
+almacenSimulado.set('hazlono-historial', JSON.stringify({
+    version: 1,
+    entradas: [{ decision: 'X', eleccion: 'hacerlo', motivo: 'Y', fecha: '2026-10-12T10:00:00.000Z' }]
+}));
+comprobar('Una fecha válida se conserva', api.historial.leer()[0].fecha === '2026-10-12T10:00:00.000Z');
+
+// La red de seguridad al cerrar la pestaña (móvil): si
+// queda un guardado pendiente, se guarda igualmente.
+almacenSimulado.delete('hazlono-borrador');
+const timersCierre = [];
+global.setTimeout = (fn, ms) => { timersCierre.push({ fn, ms }); return timersCierre.length; };
+escribir(documento.querySelector('#decision'), 'Último texto');
+comprobar('Queda un guardado pendiente', timersCierre.length === 1);
+almacenSimulado.delete('hazlono-borrador');
+api.dispararVentana('pagehide');
+comprobar('Al cerrar la pestaña (pagehide) se guarda el borrador', Boolean(almacenSimulado.get('hazlono-borrador')));
+comprobar('El borrador guardado tiene el último texto', JSON.parse(almacenSimulado.get('hazlono-borrador')).respuestas.decision === 'Último texto');
+global.setTimeout = (fn) => { fn(); return 0; };
+
+console.log('29. Indicador de progreso y aviso sin JavaScript');
+const pills = raiz.querySelectorAll('nav[aria-label="Progreso de la reflexión"] li');
+comprobar('El indicador lista los 5 pasos del flujo', pills.length === 5);
+comprobar('El indicador no incluye el cierre (es un resumen, no un paso)', !pills.some((li) => (li.textContent || '').trim() === 'Cierre'));
+comprobar('El aviso para quien llega sin JavaScript existe', Boolean(raiz.querySelector('.aviso-noscript')));
+
 console.log('\n' + (fallos === 0 ? '✅ TODAS LAS PRUEBAS PASARON' : '❌ ' + fallos + ' FALLO(S)'));
 process.exit(fallos === 0 ? 0 : 1);
-

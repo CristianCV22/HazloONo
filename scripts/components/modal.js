@@ -15,8 +15,9 @@
 import {
     almacenamientoDisponible, guardarPreferenciaAnimacion,
     aplicarPreferenciaAnimacion
-} from '../utils.js';
-import { leerHistorial, borrarHistorial, menu } from '../state.js';
+} from '../almacen.js';
+import { leerHistorial, borrarHistorial } from '../state.js';
+import { menu } from '../datos.js';
 import { reiniciar } from './form.js';
 
 /**

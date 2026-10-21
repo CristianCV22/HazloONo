@@ -3,10 +3,15 @@
 const http = require('http');
 const { spawn } = require('child_process');
 
-const EDGE = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe';
-const PUERTO = 9334;
-const URL = 'http://localhost:8471/index.html';
-const PERFIL = 'C:\\Users\\valde\\AppData\\Local\\Temp\\opencode\\edge-anular-' + Date.now();
+/* Rutas portables: el navegador, el puerto y la carpeta
+   temporal se resuelven aquí (ver pruebas/navegador.js). */
+const {
+    resolverNavegador, puertoServidor, urlPagina, perfilTemporal
+} = require('./navegador');
+const EDGE = resolverNavegador();
+const PUERTO = puertoServidor(9334);
+const URL = urlPagina('http://localhost:8471/index.html');
+const PERFIL = perfilTemporal('edge-anular');
 
 function getJSON(path) {
     return new Promise((resolve, reject) => {
