@@ -1,0 +1,24 @@
+name: Sugerencia
+description: Una idea para mejorar la herramienta
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: "¿Qué se te ocurre?"
+      description: "La idea, con el contexto que la hace valiosa."
+    validations:
+      required: true
+  - type: textarea
+    id: para-quien
+    attributes:
+      label: "¿A quién le sirve?"
+      description: "En qué momento de la reflexión ayuda. La herramienta es un espejo del proceso de decisión: cualquier sugerencia debería respetar ese tono."
+  - type: checkboxes
+    id: alcance
+    attributes:
+      label: "Alcance"
+      options:
+        - label: "No necesita dependencias nuevas."
+        - label: "No rompe la lectura sin JavaScript."
+        - label: "Respeta la privacidad (todo local, sin analítica)."

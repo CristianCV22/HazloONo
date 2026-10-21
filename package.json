@@ -2,7 +2,6 @@
   "name": "hazlo-o-no",
   "version": "1.0.0",
   "description": "Hazlo o No: una pausa consciente para tomar decisiones con mayor claridad. HTML, CSS y JavaScript sin dependencias; todo se guarda en el navegador.",
-  "private": true,
   "keywords": [
     "html",
     "css",
@@ -21,6 +20,7 @@
   "bugs": {
     "url": "https://github.com/CristianCV22/HazloONo/issues"
   },
+  "private": true,
   "scripts": {
     "test": "node tests/flujo.test.js",
     "test:grafo": "node pruebas/verificar-grafica.js",

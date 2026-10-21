@@ -1,0 +1,43 @@
+name: Incidencia
+description: Algo no funciona como debería
+labels: ["bug"]
+body:
+  - type: textarea
+    id: que-pasa
+    attributes:
+      label: "¿Qué ocurre?"
+      description: "Qué esperabas y qué pasó en su lugar."
+    validations:
+      required: true
+  - type: textarea
+    id: como-reproducir
+    attributes:
+      label: "¿Cómo se reproduce?"
+      description: "Pasos para llegar a ello, si es posible."
+    validations:
+      required: true
+  - type: input
+    id: donde
+    attributes:
+      label: "¿Dónde?"
+      description: "Navegador, sistema operativo y si la página se sirvió por HTTP o se abrió como fichero."
+    validations:
+      required: true
+  - type: textarea
+    id: pantalla
+    attributes:
+      label: "Captura o detalle"
+      description: "Una captura ayuda mucho. Si es un fallo de accesibilidad, describe también qué intentabas hacer (por ejemplo, con el teclado o con un lector de pantalla)."
+  - type: checkboxes
+    id: comprobaciones
+    attributes:
+      label: "Comprobaciones"
+      options:
+        - label: "He probado en otro navegador y ocurre igual."
+        - label: "He probado sin JavaScript."
+  - type: checkboxes
+    id: acepto
+    attributes:
+      label: "Privacidad"
+      options:
+        - label: "El informe no contiene datos personales ni reflexiones escritas por mí."

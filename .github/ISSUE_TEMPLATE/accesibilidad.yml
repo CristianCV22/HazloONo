@@ -1,0 +1,33 @@
+name: Accesibilidad
+description: Un problema de accesibilidad
+labels: ["accesibilidad"]
+body:
+  - type: dropdown
+    id: tipo
+    attributes:
+      label: "¿Qué tipo de problema es?"
+      options:
+        - Teclado (no se puede alcanzar o usar un control)
+        - Lector de pantalla (no se anuncia o se anuncia mal)
+        - Contraste (algo no se distingue)
+        - Movimiento (animación que molesta o provoca síntomas)
+        - Otro
+    validations:
+      required: true
+  - type: textarea
+    id: donde
+    attributes:
+      label: "¿Dónde y qué intentabas hacer?"
+      description: "El paso, el control y qué esperabas que ocurriera."
+    validations:
+      required: true
+  - type: input
+    id: tecnologia
+    attributes:
+      label: "Tecnología de asistencia"
+      description: "Lector de pantalla, navegador y versión."
+  - type: textarea
+    id: alternativa
+    attributes:
+      label: "¿Cómo lo resolverías?"
+      description: "No hace falta una solución perfectta: con saber qué esperabas basta."
