@@ -63,13 +63,12 @@ function iniciar() {
     }
 
     // Inicializar la experiencia inmersiva Dual-State
-    // (se activa solo cuando el usuario hace clic
-    // en "Ver inmersivamente" desde el paso de Elección).
+    // (se inicializa SOLO cuando el usuario hace clic en
+    // "Ver inmersivamente" desde el paso de Elección).
     const contenedor = document.querySelector('#dual-state-canvas');
     if (contenedor) {
         try {
             dualState = new DualStateExperience(contenedor);
-            dualState.init();
             window.dualState = dualState;
         } catch (e) {
             /* Dual-State no disponible en este entorno
