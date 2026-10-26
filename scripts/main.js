@@ -21,6 +21,14 @@ import { pasoActual, secciones } from './datos.js';
 import { mostrarPaso, restaurarBorrador } from './state.js';
 import { initForm, actualizarEmocionUI, prepararCierre } from './components/form.js';
 import { initModal } from './components/modal.js';
+import { DualStateExperience } from './components/dual-state.js';
+
+/**
+ * Instancia de la experiencia inmersiva Dual-State.
+ * Se expone en window.dualState para que form.js pueda
+ * activarla sin crear dependencias de importación.
+ */
+let dualState = null;
 
 /**
  * Arranque de la aplicación.
@@ -52,6 +60,32 @@ function iniciar() {
     actualizarEmocionUI();
     if (pasoActual === secciones.length - 1) {
         prepararCierre();
+    }
+
+    // Inicializar la experiencia inmersiva Dual-State
+    // (se activa solo cuando el usuario hace clic
+    // en "Ver inmersivamente" desde el paso de Elección).
+    const contenedor = document.querySelector('#dual-state-canvas');
+    if (contenedor) {
+        try {
+            dualState = new DualStateExperience(contenedor);
+            dualState.init();
+            window.dualState = dualState;
+        } catch (e) {
+            /* Dual-State no disponible en este entorno
+               (p. ej. pruebas sin Three.js). La app sigue
+               funcionando sin la experiencia inmersiva. */
+        }
+    }
+
+    // Cuando el usuario confirma desde la experiencia
+    // inmersiva, se desactiva y se vuelve al flujo normal.
+    if (document.addEventListener) {
+        document.addEventListener('dual-state-confirmar', () => {
+            if (dualState) {
+                dualState.desactivar();
+            }
+        });
     }
 
     // Arranque completado: la red de seguridad

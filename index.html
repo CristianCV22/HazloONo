@@ -38,7 +38,17 @@
     <link rel="stylesheet" href="styles/components/logo.css">
     <link rel="stylesheet" href="styles/components/form.css">
     <link rel="stylesheet" href="styles/components/buttons.css">
+    <link rel="stylesheet" href="styles/components/dual-state.css">
     <link rel="stylesheet" href="styles/states.css">
+    <!-- Import map: Three.js desde CDN como módulo ES,
+         sin dependencias instaladas en el proyecto. -->
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://esm.sh/three@0.163.0/build/three.module.js"
+        }
+    }
+    </script>
     <!-- Raíz de la aplicación: módulo ES (diferido,
          con el DOM ya parseado). -->
     <script type="module" src="scripts/main.js"></script>
@@ -429,6 +439,7 @@
 
                 <p role="alert" id="alerta-eleccion"></p>
                 <button type="button" data-retroceder data-secundario>← Anterior</button>
+                <button type="button" data-dual-state data-secundario>Ver inmersivamente</button>
                 <button type="button" data-terminar>Terminar reflexión</button>
             </section>
 
@@ -453,6 +464,13 @@
             <p id="pie-paso" aria-live="polite">Bienvenida</p>
             <p id="pie-consejo">«Antes de decidir, detente un momento.»</p>
         </footer>
+
+        <!-- ============================================================
+             CANVAS WEBGL: experiencia inmersiva "Dual-State"
+             Oculto por defecto; se activa desde el paso de Elección.
+             ============================================================ -->
+        <div id="dual-state-canvas" class="dual-state-canvas" hidden></div>
+
     </main>
 
     <!-- ============================================================

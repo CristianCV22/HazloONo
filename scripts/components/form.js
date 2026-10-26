@@ -280,7 +280,19 @@ export function initForm() {
             return;
         }
 
+        if (boton.hasAttribute('data-dual-state')) {
+            // Activar la experiencia inmersiva Dual-State.
+            if (window.dualState) {
+                window.dualState.activar();
+            }
+            return;
+        }
+
         if (boton.hasAttribute('data-avanzar')) {
+            // Salir de la experiencia inmersiva si está activa.
+            if (window.dualState && window.dualState.estaActivo()) {
+                window.dualState.desactivar();
+            }
             if (!validarPasoActual()) {
                 return; // No avanzar hasta que el paso sea válido.
             }
@@ -288,6 +300,10 @@ export function initForm() {
         }
 
         if (boton.hasAttribute('data-retroceder')) {
+            // Salir de la experiencia inmersiva si está activa.
+            if (window.dualState && window.dualState.estaActivo()) {
+                window.dualState.desactivar();
+            }
             if (transicionando) {
                 return;
             }

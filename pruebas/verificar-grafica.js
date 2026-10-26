@@ -27,6 +27,9 @@ const MODULOS = {
     'scripts/components/umbral.js': [
         ['../datos.js', ['secciones', 'pasoActual', 'transicionando']]
     ],
+    'scripts/components/dual-state.js': [
+        ['https://esm.sh/three@0.163.0/build/three.module.js', ['*']]
+    ],
     'scripts/state.js': [
         ['./datos.js', ['secciones', 'pasoActual', 'transicionando', 'respuestas', 'fijarPasoActual', 'fijarTransicionando', 'formulario', 'logo', 'menu', 'navIndicador', 'pasosIndicador', 'piePaso', 'clasesPaso', 'nombresPaso', 'obtenerIdReflexion', 'fijarIdReflexion']],
         ['./almacen.js', ['almacenLocal', 'movimientoReducido']],
@@ -51,7 +54,8 @@ const MODULOS = {
         ['./datos.js', ['pasoActual', 'secciones']],
         ['./state.js', ['mostrarPaso', 'restaurarBorrador']],
         ['./components/form.js', ['initForm', 'actualizarEmocionUI', 'prepararCierre']],
-        ['./components/modal.js', ['initModal']]
+        ['./components/modal.js', ['initModal']],
+        ['./components/dual-state.js', ['DualStateExperience']]
     ]
 };
 
@@ -72,6 +76,11 @@ const grafo = {}; // módulo → [módulos de los que depende]
 for (const [rel, importaciones] of Object.entries(MODULOS)) {
     grafo[rel] = [];
     for (const [fuente, nombres] of importaciones) {
+        // Ignorar importaciones de URLs externas (CDN, etc.): no son
+        // archivos locales del proyecto y no afectan al grafo acíclico.
+        if (fuente.startsWith('http://') || fuente.startsWith('https://')) {
+            continue;
+        }
         const absoluta = normalizar(path.relative(BASE, path.resolve(path.dirname(BASE + rel), fuente)));
         const destino = contenido[absoluta];
         if (!destino) {

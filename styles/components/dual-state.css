@@ -1,0 +1,153 @@
+/* ==========================================================================
+   Hazlo o No - Componente: Dual-State WebGL (overlay UI)
+   ==========================================================================
+   Estilos de la capa de superposición HTML para la
+   experiencia inmersiva de toma de decisiones.
+   - El canvas WebGL vive detrás (pointer-events: none).
+   - El titular y el botón de confirmación son HTML/CSS.
+   - pointer-events: auto solo en los botones para no
+     bloquear el scroll nativo ni los clics del formulario.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   CONTENEDOR DEL CANVAS
+   -------------------------------------------------------------------------- */
+.dual-state-canvas {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none; /* el clic atraviesa hacia el formulario */
+    margin: 0;
+    display: block;
+    background: #0C2F65; /* fondo de respaldo si WebGL falla */
+}
+
+/* --------------------------------------------------------------------------
+   OVERLAY DE LA UI
+   -------------------------------------------------------------------------- */
+.dual-state-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    pointer-events: none; /* todo atraviesa excepto los botones */
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: #1E293B;
+}
+
+/* Contenido centrado */
+.dual-state-hud {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    width: 100%;
+    max-width: 600px;
+    padding: 1rem;
+    pointer-events: none; /* se anula solo en el botón */
+}
+
+/* Titular dinámico: cambia entre "HAZLO" y "NO" */
+.dual-title {
+    margin: 0 0 0.5rem;
+    font-size: clamp(2rem, 8vw, 4rem);
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    text-transform: uppercase;
+    color: #0C2F65;
+    transition: color 0.6s ease, transform 0.6s ease;
+}
+
+/* Subtítulo */
+.dual-subtitle {
+    margin: 0 0 2rem;
+    font-size: clamp(0.9rem, 3vw, 1.25rem);
+    line-height: 1.6;
+    color: #475569;
+    max-width: 420px;
+    margin-left: auto;
+    margin-right: auto;
+    pointer-events: none;
+}
+
+/* Botón de confirmación */
+.dual-btn-confirm {
+    position: relative;
+    pointer-events: auto; /* el botón SÍ recibe clics */
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.9rem 1.8rem;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #FFFFFF;
+    background: #0C2F65;
+    border: none;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 4px 14px rgba(12, 47, 101, 0.25);
+}
+
+.dual-btn-confirm:hover {
+    background: #094584;
+    transform: translateY(-2px);
+}
+
+.dual-btn-confirm:active {
+    transform: translateY(0);
+}
+
+.dual-btn-confirm:focus-visible {
+    outline: 3px solid #2563EB;
+    outline-offset: 2px;
+}
+
+/* --------------------------------------------------------------------------
+   ESTADOS ATMOSFÉRICOS (clases en <body>)
+   -------------------------------------------------------------------------- */
+body.dual-estado-hacerlo {
+    --dual-fondo: #F8FAFC;
+    --dual-titulo: #0C2F65;
+}
+
+body.dual-estado-no-hacerlo {
+    --dual-fondo: #F1F5F9;
+    --dual-titulo: #1E293B;
+}
+
+/* --------------------------------------------------------------------------
+   MOVIMIENTO REDUCIDO
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+    .dual-title,
+    .dual-subtitle,
+    .dual-btn-confirm {
+        transition: none !important;
+        animation: none !important;
+    }
+}
+
+/* --------------------------------------------------------------------------
+   PANTALLAS PEQUEÑAS
+   -------------------------------------------------------------------------- */
+@media (max-width: 600px) {
+    .dual-state-hud {
+        padding: 1.5rem 1rem;
+    }
+    .dual-title {
+        font-size: clamp(1.75rem, 10vw, 3rem);
+    }
+    .dual-subtitle {
+        font-size: clamp(0.85rem, 4vw, 1.1rem);
+    }
+    .dual-btn-confirm {
+        width: 100%;
+        max-width: 280px;
+        padding: 1rem;
+    }
+}
