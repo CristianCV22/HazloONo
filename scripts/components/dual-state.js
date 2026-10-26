@@ -122,6 +122,9 @@ export class DualStateExperience {
         this._crearUI();
         this._registrarEventos();
 
+        // Mostrar el contenedor del canvas (quita el atributo hidden)
+        this.contenedor.hidden = false;
+
         this.activo = true;
         this._animar();
 
@@ -355,6 +358,9 @@ export class DualStateExperience {
         if (this.renderer && this.renderer.domElement && this.contenedor.contains(this.renderer.domElement)) {
             this.contenedor.removeChild(this.renderer.domElement);
         }
+
+        // Ocultar el contenedor del canvas (vuelve a poner hidden)
+        this.contenedor.hidden = true;
 
         // Quitar overlay del body
         if (this.overlay && this.overlay.parentNode) {
